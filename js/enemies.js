@@ -256,6 +256,73 @@ class Enemy {
                 this.fireBreath = true;
                 break;
 
+            // FOREST ENEMIES - Starting area dangers!
+            case 'forest_wolf':
+                // Fast and vicious forest predator
+                this.maxHp = 70;
+                this.hp = 70;
+                this.attack = 18;
+                this.defense = 6;
+                this.speed = 3.2;
+                this.expValue = 35;
+                this.coinDrop = 12;
+                this.aggroRange = 200;
+                this.attackRange = 35;
+                this.attackCooldownMax = 1100;
+                this.packHunter = true; // Stronger when near other wolves
+                break;
+
+            case 'corrupted_sprite':
+                // Twisted forest spirit
+                this.maxHp = 50;
+                this.hp = 50;
+                this.attack = 25;
+                this.defense = 4;
+                this.speed = 4;
+                this.expValue = 45;
+                this.coinDrop = 20;
+                this.aggroRange = 180;
+                this.attackRange = 40;
+                this.attackCooldownMax = 900;
+                this.magicDamage = true;
+                this.width = 24;
+                this.height = 24;
+                break;
+
+            case 'wild_boar':
+                // Charges at you!
+                this.maxHp = 100;
+                this.hp = 100;
+                this.attack = 30;
+                this.defense = 12;
+                this.speed = 2.8;
+                this.expValue = 50;
+                this.coinDrop = 18;
+                this.aggroRange = 160;
+                this.attackRange = 45;
+                this.attackCooldownMax = 2000;
+                this.chargeAttack = true;
+                this.width = 40;
+                this.height = 32;
+                break;
+
+            case 'forest_spider':
+                // Venomous and sneaky
+                this.maxHp = 45;
+                this.hp = 45;
+                this.attack = 15;
+                this.defense = 5;
+                this.speed = 2.5;
+                this.expValue = 30;
+                this.coinDrop = 10;
+                this.aggroRange = 140;
+                this.attackRange = 30;
+                this.attackCooldownMax = 800;
+                this.poisonous = true;
+                this.width = 28;
+                this.height = 20;
+                break;
+
             default:
                 // Default tough enemy
                 this.maxHp = 100;
@@ -442,9 +509,177 @@ class Enemy {
                 this.drawSkyDragon(ctx);
                 break;
 
+            case 'forest_wolf':
+                this.drawForestWolf(ctx);
+                break;
+
+            case 'corrupted_sprite':
+                this.drawCorruptedSprite(ctx);
+                break;
+
+            case 'wild_boar':
+                this.drawWildBoar(ctx);
+                break;
+
+            case 'forest_spider':
+                this.drawForestSpider(ctx);
+                break;
+
             default:
                 this.drawDefaultEnemy(ctx);
         }
+    }
+
+    // FOREST ENEMY DRAWING FUNCTIONS
+    drawForestWolf(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Wolf body
+        ctx.fillStyle = '#8B7355';
+        ctx.fillRect(4, 12, 24, 16);
+
+        // Head
+        ctx.fillStyle = '#A0855B';
+        ctx.fillRect(0, 8, 12, 12);
+
+        // Snout
+        ctx.fillRect(-4, 12, 6, 6);
+
+        // Ears
+        ctx.fillStyle = '#6B5338';
+        ctx.fillRect(2, 4, 4, 6);
+        ctx.fillRect(8, 4, 4, 6);
+
+        // Eyes (glowing)
+        ctx.fillStyle = '#FF6600';
+        ctx.fillRect(2, 10, 3, 3);
+        ctx.fillRect(7, 10, 3, 3);
+
+        // Legs
+        ctx.fillStyle = '#8B7355';
+        ctx.fillRect(6, 28, 4, 12);
+        ctx.fillRect(22, 28, 4, 12);
+
+        // Tail
+        ctx.fillRect(28, 14, 8, 6);
+
+        // Health bar
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, -8, 32 * (this.hp / this.maxHp), 4);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(0, -8, 32, 4);
+
+        ctx.restore();
+    }
+
+    drawCorruptedSprite(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Corrupted magical glow
+        ctx.globalAlpha = 0.7 + Math.sin(this.frame * 0.15) * 0.3;
+
+        // Dark energy core
+        ctx.fillStyle = '#440066';
+        ctx.beginPath();
+        ctx.arc(12, 12, 10, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Corruption tendrils
+        ctx.strokeStyle = '#880088';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2 + this.frame * 0.08;
+            ctx.beginPath();
+            ctx.moveTo(12, 12);
+            ctx.lineTo(12 + Math.cos(angle) * 12, 12 + Math.sin(angle) * 12);
+            ctx.stroke();
+        }
+
+        // Glowing evil eyes
+        ctx.fillStyle = '#FF00FF';
+        ctx.fillRect(8, 10, 3, 3);
+        ctx.fillRect(13, 10, 3, 3);
+
+        ctx.globalAlpha = 1;
+
+        // Health bar
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, -8, 24 * (this.hp / this.maxHp), 3);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(0, -8, 24, 3);
+
+        ctx.restore();
+    }
+
+    drawWildBoar(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Massive body
+        ctx.fillStyle = '#5C4033';
+        ctx.fillRect(8, 8, 28, 20);
+
+        // Head
+        ctx.fillStyle = '#4A3426';
+        ctx.fillRect(0, 10, 12, 16);
+
+        // Tusks
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(-4, 20, 6, 3);
+        ctx.fillRect(-4, 24, 6, 3);
+
+        // Eyes (angry)
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(4, 14, 4, 4);
+
+        // Legs
+        ctx.fillStyle = '#3C2A1E';
+        ctx.fillRect(12, 28, 6, 12);
+        ctx.fillRect(28, 28, 6, 12);
+
+        // Tail
+        ctx.fillRect(36, 12, 4, 4);
+
+        // Health bar
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, -10, 40 * (this.hp / this.maxHp), 5);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(0, -10, 40, 5);
+
+        ctx.restore();
+    }
+
+    drawForestSpider(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Body
+        ctx.fillStyle = '#2F4F2F';
+        ctx.fillRect(8, 6, 12, 8);
+
+        // Legs
+        ctx.fillStyle = '#1E3F1E';
+        ctx.fillRect(0, 4, 3, 12);
+        ctx.fillRect(25, 4, 3, 12);
+        ctx.fillRect(4, 2, 3, 14);
+        ctx.fillRect(21, 2, 3, 14);
+
+        // Eyes (multiple)
+        ctx.fillStyle = '#88FF00';
+        ctx.fillRect(10, 8, 2, 2);
+        ctx.fillRect(14, 8, 2, 2);
+        ctx.fillRect(12, 6, 2, 2);
+        ctx.fillRect(12, 10, 2, 2);
+
+        // Health bar
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, -6, 28 * (this.hp / this.maxHp), 3);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(0, -6, 28, 3);
+
+        ctx.restore();
     }
 
     // NEW ENEMY DRAWING FUNCTIONS
