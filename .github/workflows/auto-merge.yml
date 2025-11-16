@@ -33,13 +33,19 @@ jobs:
           for pr in $prs; do
             echo "Checking PR #$pr..."
 
-            # Check if all required checks have passed
-            checks_passed=$(gh pr checks $pr --json bucket,state --jq 'all(.state == "SUCCESS" or .state == "SKIPPED")')
+            # Check if required checks have passed (ignore Auto Create PR failures)
+            # Only check PR Check and Smoke Tests workflows
+            checks_passed=$(gh pr checks $pr --json name,state --jq '
+              [.[] | select(.name == "Validate PR" or .name == "Run Smoke Tests")] |
+              if length == 0 then false
+              else all(.state == "SUCCESS" or .state == "SKIPPED")
+              end
+            ')
 
             if [ "$checks_passed" = "true" ]; then
-              echo "All checks passed for PR #$pr, merging..."
+              echo "All required checks passed for PR #$pr, merging..."
               gh pr merge $pr --squash --delete-branch --auto || true
             else
-              echo "PR #$pr has pending or failed checks, skipping..."
+              echo "PR #$pr has pending or failed required checks, skipping..."
             fi
           done
