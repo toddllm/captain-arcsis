@@ -1,0 +1,38 @@
+name: PR Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate:
+    name: Validate PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check JavaScript syntax
+        run: |
+          echo "Validating JavaScript files..."
+          for file in js/*.js; do
+            node --check "$file" || exit 1
+          done
+          echo "All JavaScript files have valid syntax"
+
+      - name: Verify required files exist
+        run: |
+          echo "Checking required files..."
+          test -f index.html || (echo "Missing index.html" && exit 1)
+          test -f js/game.js || (echo "Missing js/game.js" && exit 1)
+          test -d js || (echo "Missing js directory" && exit 1)
+          echo "All required files present"
+
+      - name: Check HTML validity
+        run: |
+          echo "Validating index.html..."
+          grep -q '<!DOCTYPE html>' index.html || (echo "Missing DOCTYPE" && exit 1)
+          grep -q '<canvas id="gameCanvas"' index.html || (echo "Missing game canvas" && exit 1)
+          echo "HTML structure valid"
