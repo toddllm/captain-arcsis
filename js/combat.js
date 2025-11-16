@@ -4,6 +4,22 @@
 const Combat = {
     damageNumbers: [],
     effects: [],
+    dustParticles: [],
+
+    addDustParticle: function(x, y) {
+        // Add multiple small dust particles for a natural effect
+        for (let i = 0; i < 3; i++) {
+            this.dustParticles.push({
+                x: x + Utils.random(-8, 8),
+                y: y + Utils.random(-4, 4),
+                vx: Utils.random(-1, 1),
+                vy: Utils.random(-2, -0.5),
+                size: Utils.random(2, 5),
+                frame: 0,
+                maxFrames: Utils.random(15, 25)
+            });
+        }
+    },
 
     addDamageNumber: function(x, y, damage, color = '#FF0000') {
         this.damageNumbers.push({
@@ -38,9 +54,23 @@ const Combat = {
             effect.frame++;
             return effect.frame < effect.maxFrames;
         });
+
+        // Update dust particles
+        this.dustParticles = this.dustParticles.filter(particle => {
+            particle.frame++;
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            particle.vy += 0.1; // Gravity
+            return particle.frame < particle.maxFrames;
+        });
     },
 
     draw: function(ctx) {
+        // Draw dust particles (behind everything else)
+        this.dustParticles.forEach(particle => {
+            Sprites.drawDustParticle(ctx, particle);
+        });
+
         // Draw damage numbers
         this.damageNumbers.forEach(num => {
             Sprites.drawDamageNumber(ctx, num.x, num.y, num.damage, num.frame, num.color);
@@ -707,5 +737,6 @@ const Combat = {
     clear: function() {
         this.damageNumbers = [];
         this.effects = [];
+        this.dustParticles = [];
     }
 };
