@@ -6,6 +6,7 @@
   "scripts": {
     "test": "playwright test",
     "test:smoke": "playwright test tests/smoke.spec.js",
+    "test:features": "playwright test tests/smoke.spec.js --grep 'Feature Smoke Tests'",
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report"
   },
