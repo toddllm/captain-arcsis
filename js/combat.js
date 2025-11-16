@@ -5,11 +5,12 @@ const Combat = {
     damageNumbers: [],
     effects: [],
 
-    addDamageNumber: function(x, y, damage) {
+    addDamageNumber: function(x, y, damage, color = '#FF0000') {
         this.damageNumbers.push({
             x: x,
             y: y,
             damage: damage,
+            color: color,
             frame: 0,
             maxFrames: 30
         });
@@ -42,7 +43,7 @@ const Combat = {
     draw: function(ctx) {
         // Draw damage numbers
         this.damageNumbers.forEach(num => {
-            Sprites.drawDamageNumber(ctx, num.x, num.y, num.damage, num.frame);
+            Sprites.drawDamageNumber(ctx, num.x, num.y, num.damage, num.frame, num.color);
         });
 
         // Draw effects
@@ -126,6 +127,42 @@ const Combat = {
 
             case 'arcsis_nova':
                 this.drawArcsisNovaEffect(ctx, effect);
+                break;
+
+            case 'meteor':
+                this.drawMeteorEffect(ctx, effect);
+                break;
+
+            case 'freeze':
+                this.drawFreezeEffect(ctx, effect);
+                break;
+
+            case 'dimension':
+                this.drawDimensionEffect(ctx, effect);
+                break;
+
+            case 'ultimate':
+                this.drawUltimateEffect(ctx, effect);
+                break;
+
+            case 'combo':
+                this.drawComboEffect(ctx, effect);
+                break;
+
+            case 'dodge':
+                this.drawDodgeEffect(ctx, effect);
+                break;
+
+            case 'laststand':
+                this.drawLastStandEffect(ctx, effect);
+                break;
+
+            case 'potion':
+                this.drawPotionEffect(ctx, effect);
+                break;
+
+            case 'megapotion':
+                this.drawMegaPotionEffect(ctx, effect);
                 break;
 
             default:
@@ -435,6 +472,29 @@ const Combat = {
         }
     },
 
+    drawMeteorEffect: function(ctx, effect) {
+        ctx.globalAlpha = 1 - (effect.frame / effect.maxFrames);
+        const size = 30 + effect.frame * 2;
+
+        // Meteor impact
+        ctx.fillStyle = '#FF4500';
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fire particles
+        ctx.fillStyle = '#FFD700';
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
+            const dist = size * 1.2;
+            ctx.fillRect(
+                effect.x + Math.cos(angle) * dist - 3,
+                effect.y + Math.sin(angle) * dist - 3,
+                6, 6
+            );
+        }
+    },
+
     drawSpinImpactEffect: function(ctx, effect) {
         ctx.globalAlpha = 1 - (effect.frame / effect.maxFrames);
 
@@ -533,6 +593,115 @@ const Combat = {
             ctx.textAlign = 'center';
             ctx.fillText('ARCSIS NOVA!', effect.x, effect.y - size - 20);
         }
+    },
+
+    drawFreezeEffect: function(ctx, effect) {
+        ctx.globalAlpha = 1 - (effect.frame / effect.maxFrames);
+
+        // Ice crystal effect
+        ctx.strokeStyle = '#00FFFF';
+        ctx.lineWidth = 3;
+
+        for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(effect.x, effect.y);
+            const len = 40 + effect.frame;
+            ctx.lineTo(
+                effect.x + Math.cos(angle) * len,
+                effect.y + Math.sin(angle) * len
+            );
+            ctx.stroke();
+        }
+
+        ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, 50, 0, Math.PI * 2);
+        ctx.fill();
+    },
+
+    drawDimensionEffect: function(ctx, effect) {
+        ctx.globalAlpha = 1 - (effect.frame / effect.maxFrames);
+
+        // Collapsing dimension
+        const size = 200 - effect.frame * 3;
+
+        ctx.strokeStyle = '#FF00FF';
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, size, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#9400D3';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, size * 0.7, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(75, 0, 130, 0.5)';
+        ctx.fillRect(effect.x - size, effect.y - size, size * 2, size * 2);
+    },
+
+    drawUltimateEffect: function(ctx, effect) {
+        ctx.globalAlpha = 1 - (effect.frame / effect.maxFrames);
+
+        // Screen-filling ultimate effect
+        const progress = effect.frame / effect.maxFrames;
+
+        // Expanding circles
+        for (let i = 0; i < 5; i++) {
+            const size = progress * 400 + i * 50;
+            ctx.strokeStyle = i % 2 === 0 ? '#FF0000' : '#FFD700';
+            ctx.lineWidth = 10 - i * 2;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, size, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Warning text
+        if (effect.frame < 50) {
+            ctx.fillStyle = '#FF0000';
+            ctx.font = 'bold 48px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('ULTIMATE DESTRUCTION', effect.x, effect.y);
+        }
+    },
+
+    drawComboEffect: function(ctx, effect) {
+        Sprites.drawComboEffect(ctx, effect.x, effect.y, effect.combo, effect.frame);
+    },
+
+    drawDodgeEffect: function(ctx, effect) {
+        Sprites.drawDodgeEffect(ctx, effect.x, effect.y, effect.frame);
+    },
+
+    drawLastStandEffect: function(ctx, effect) {
+        Sprites.drawLastStandEffect(ctx, effect.x, effect.y, effect.frame);
+    },
+
+    drawPotionEffect: function(ctx, effect) {
+        Sprites.drawPotionEffect(ctx, effect.x, effect.y, effect.frame, effect.color);
+    },
+
+    drawMegaPotionEffect: function(ctx, effect) {
+        ctx.globalAlpha = 1 - (effect.frame / effect.maxFrames);
+
+        // Rainbow restoration effect
+        const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
+        const size = 30 + effect.frame;
+
+        colors.forEach((color, i) => {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, size + i * 10, 0, Math.PI * 2);
+            ctx.stroke();
+        });
+
+        ctx.font = 'bold 16px monospace';
+        ctx.fillStyle = '#FFD700';
+        ctx.textAlign = 'center';
+        ctx.fillText('FULL RESTORE!', effect.x, effect.y - size - 30);
     },
 
     clear: function() {

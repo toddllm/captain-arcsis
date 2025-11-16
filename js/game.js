@@ -1,5 +1,5 @@
-// Main Game Loop for Captain Arcsis
-// Core game state management and rendering
+// Main Game Loop for Captain Arcsis - ENHANCED EDITION
+// With Character Selection, Shop System, and Progressive Anizon Boss!
 
 const Game = {
     canvas: null,
@@ -8,7 +8,7 @@ const Game = {
     deltaTime: 0,
     playTime: 0,
 
-    state: 'menu', // menu, playing, paused, dialogue, boss_intro, game_over, victory
+    state: 'menu', // menu, character_select, playing, paused, dialogue, boss_intro, game_over, victory, shop, skills
     currentLevel: 1,
     defeatedBosses: [],
 
@@ -16,9 +16,21 @@ const Game = {
     menuSelection: 0,
     menuOptions: ['New Game', 'Continue', 'Controls'],
 
+    // Character selection
+    characterSelection: 0,
+    characterOptions: ['YELLOW', 'RED', 'GREEN', 'BLUE'],
+
     // Pause menu
     pauseSelection: 0,
-    pauseOptions: ['Resume', 'Save Game', 'Quit to Menu'],
+    pauseOptions: ['Resume', 'Shop', 'Skills', 'Save Game', 'Quit to Menu'],
+
+    // Shop state
+    shopSelection: 0,
+    shopItems: [],
+
+    // Skills state
+    skillSelection: 0,
+    skillOptions: [],
 
     // Inventory display
     showInventory: false,
@@ -26,23 +38,18 @@ const Game = {
     init: function() {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-
-        // Disable image smoothing for pixel-perfect rendering
         this.ctx.imageSmoothingEnabled = false;
 
-        // Initialize systems
         Input.init();
         Audio.init();
         Player.init(400, 300);
 
-        // Check for existing save
         if (SaveSystem.hasSaveData()) {
             this.menuOptions[1] = 'Continue';
         } else {
             this.menuOptions[1] = 'Continue (No Save)';
         }
 
-        // Start game loop
         this.lastTime = performance.now();
         requestAnimationFrame((time) => this.gameLoop(time));
     },
@@ -51,7 +58,6 @@ const Game = {
         this.deltaTime = currentTime - this.lastTime;
         this.lastTime = currentTime;
 
-        // Cap delta time to prevent huge jumps
         if (this.deltaTime > 100) this.deltaTime = 100;
 
         this.update(this.deltaTime);
@@ -61,7 +67,6 @@ const Game = {
     },
 
     update: function(deltaTime) {
-        // Resume audio context on any input
         if (Object.keys(Input.keys).some(k => Input.keys[k])) {
             Audio.resume();
         }
@@ -71,12 +76,24 @@ const Game = {
                 this.updateMenu();
                 break;
 
+            case 'character_select':
+                this.updateCharacterSelect();
+                break;
+
             case 'playing':
                 this.updatePlaying(deltaTime);
                 break;
 
             case 'paused':
                 this.updatePaused();
+                break;
+
+            case 'shop':
+                this.updateShop();
+                break;
+
+            case 'skills':
+                this.updateSkills();
                 break;
 
             case 'dialogue':
@@ -129,28 +146,48 @@ const Game = {
         Audio.buttonPress();
 
         switch (this.menuSelection) {
-            case 0: // New Game
-                this.startNewGame();
+            case 0: // New Game - Go to character selection
+                this.state = 'character_select';
+                this.characterSelection = 3; // Default to Blue
                 break;
 
             case 1: // Continue
                 if (SaveSystem.hasSaveData()) {
                     this.loadGame();
                 } else {
-                    // No save data
                     Audio.playerHurt();
                 }
                 break;
 
             case 2: // Controls
-                // Show controls (already shown at bottom)
                 break;
         }
     },
 
-    startNewGame: function() {
-        // Reset everything
-        Player.init(100, 300);
+    updateCharacterSelect: function() {
+        if (Input.wasJustPressed('ArrowLeft') || Input.wasJustPressed('KeyA')) {
+            this.characterSelection = (this.characterSelection - 1 + this.characterOptions.length) % this.characterOptions.length;
+            Audio.menuSelect();
+        }
+
+        if (Input.wasJustPressed('ArrowRight') || Input.wasJustPressed('KeyD')) {
+            this.characterSelection = (this.characterSelection + 1) % this.characterOptions.length;
+            Audio.menuSelect();
+        }
+
+        if (Input.wasJustPressed('Space') || Input.wasJustPressed('Enter')) {
+            Audio.buttonPress();
+            this.startNewGame(this.characterOptions[this.characterSelection]);
+        }
+
+        if (Input.wasJustPressed('Escape')) {
+            this.state = 'menu';
+            Audio.menuSelect();
+        }
+    },
+
+    startNewGame: function(arcsisType = 'BLUE') {
+        Player.init(100, 300, arcsisType);
         Enemies.clear();
         Puzzles.clear();
         Bosses.clear();
@@ -161,10 +198,8 @@ const Game = {
         this.currentLevel = 1;
         this.playTime = 0;
 
-        // Load forest area (intro)
         World.loadArea('forest');
 
-        // Start intro dialogue
         this.state = 'dialogue';
         Dialogue.start('intro');
     },
@@ -186,20 +221,28 @@ const Game = {
     updatePlaying: function(deltaTime) {
         this.playTime += deltaTime;
 
-        // Check for pause
         if (Input.wasJustPressed('Escape')) {
             this.state = 'paused';
+            this.pauseSelection = 0;
             Audio.menuSelect();
             return;
         }
 
-        // Check for inventory toggle
         if (Input.wasJustPressed('KeyI')) {
             this.showInventory = !this.showInventory;
             Audio.menuSelect();
         }
 
-        // Skip if inventory is open
+        if (Input.wasJustPressed('KeyB')) {
+            this.openShop();
+            return;
+        }
+
+        if (Input.wasJustPressed('KeyK')) {
+            this.openSkills();
+            return;
+        }
+
         if (this.showInventory) {
             if (Input.wasJustPressed('Escape') || Input.wasJustPressed('KeyI')) {
                 this.showInventory = false;
@@ -207,7 +250,6 @@ const Game = {
             return;
         }
 
-        // Update game entities
         Player.update(deltaTime, World);
         Enemies.update(deltaTime, Player);
         Fairy.update(deltaTime, Player);
@@ -215,30 +257,25 @@ const Game = {
         Puzzles.update(Player);
         Combat.update(deltaTime);
 
-        // Check collisions
         Enemies.checkCollisions(Player);
         Bosses.checkCollisions(Player);
 
-        // Check world updates (area transitions, coins)
         const nextArea = World.update(Player);
         if (nextArea) {
             this.transitionToArea(nextArea);
         }
 
-        // Check button press in forest
         if (World.checkButtonPress(Player)) {
             Player.setFlag('button_pressed', true);
             Audio.buttonPress();
             this.state = 'dialogue';
             Dialogue.start('button_press');
 
-            // After dialogue, transition to dungeon
             setTimeout(() => {
                 if (Player.getFlag('button_pressed') && !Player.getFlag('entered_dungeon')) {
                     Player.setFlag('entered_dungeon', true);
                     this.transitionToArea('dungeon_1');
 
-                    // Show fairy after entering dungeon
                     setTimeout(() => {
                         if (!Player.hasFairy) {
                             this.state = 'dialogue';
@@ -249,7 +286,7 @@ const Game = {
             }, 3000);
         }
 
-        // Check for boss encounters
+        // Check for Anizon encounter at end of each dungeon level
         if (Bosses.currentBoss && !Bosses.currentBoss.active && !Bosses.currentBoss.defeated) {
             const area = World.areas[World.currentArea];
 
@@ -260,13 +297,8 @@ const Game = {
                 setTimeout(() => {
                     this.state = 'boss_intro';
                 }, 2000);
-            } else if (area.boss === 'anizon' && !Player.getFlag('met_anizon')) {
-                Player.setFlag('met_anizon', true);
-                this.state = 'dialogue';
-                Dialogue.start('anizon_pre');
-                setTimeout(() => {
-                    this.state = 'boss_intro';
-                }, 2000);
+            } else if (area.boss === 'anizon') {
+                this.state = 'boss_intro';
             } else {
                 this.state = 'boss_intro';
             }
@@ -275,27 +307,41 @@ const Game = {
         // Check for boss defeat
         if (Bosses.isDefeated()) {
             const area = World.areas[World.currentArea];
-            if (!this.defeatedBosses.includes(area.boss)) {
-                this.defeatedBosses.push(area.boss);
 
-                if (area.isFinalBoss) {
-                    this.state = 'dialogue';
-                    Dialogue.start('victory');
-                } else if (area.nextArea) {
-                    setTimeout(() => {
+            // Handle Anizon defeat specially
+            if (Bosses.currentBoss && Bosses.currentBoss.type === 'anizon') {
+                Player.onAnizonDefeat();
+
+                // Anizon appears in EVERY level - transition to next with new Anizon
+                setTimeout(() => {
+                    if (area.nextArea) {
                         this.transitionToArea(area.nextArea);
-                    }, 3000);
+                    } else {
+                        // Loop back or generate endless dungeon
+                        this.generateNextDungeonLevel();
+                    }
+                }, 5000);
+            } else {
+                if (!this.defeatedBosses.includes(area.boss)) {
+                    this.defeatedBosses.push(area.boss);
+
+                    if (area.isFinalBoss) {
+                        this.state = 'dialogue';
+                        Dialogue.start('victory');
+                    } else if (area.nextArea) {
+                        setTimeout(() => {
+                            this.transitionToArea(area.nextArea);
+                        }, 3000);
+                    }
                 }
             }
         }
 
-        // Check for player death
         if (Player.hp <= 0) {
             this.state = 'game_over';
             Audio.gameOver();
         }
 
-        // Auto-save
         SaveSystem.autoSave({
             currentLevel: this.currentLevel,
             currentArea: World.currentArea,
@@ -304,11 +350,31 @@ const Game = {
         });
     },
 
+    generateNextDungeonLevel: function() {
+        // Generate endless dungeon levels with Anizon
+        this.currentLevel++;
+        const newAreaName = `dungeon_${this.currentLevel}`;
+
+        // Create procedural dungeon area
+        if (!World.areas[newAreaName]) {
+            World.generateDungeonLevel(this.currentLevel);
+        }
+
+        World.loadArea(newAreaName);
+
+        // Always spawn Anizon with progressive difficulty
+        Bosses.spawnAnizon(Player);
+    },
+
     transitionToArea: function(areaName) {
         this.currentLevel++;
         World.loadArea(areaName);
 
-        // First enemy encounters
+        // Spawn Anizon at end of every level
+        if (areaName.includes('dungeon')) {
+            Bosses.spawnAnizon(Player);
+        }
+
         if (areaName === 'dungeon_1' && !Player.getFlag('first_zombie')) {
             Player.setFlag('first_zombie', true);
             setTimeout(() => {
@@ -357,7 +423,15 @@ const Game = {
                 this.state = 'playing';
                 break;
 
-            case 1: // Save Game
+            case 1: // Shop
+                this.openShop();
+                break;
+
+            case 2: // Skills
+                this.openSkills();
+                break;
+
+            case 3: // Save Game
                 SaveSystem.save({
                     currentLevel: this.currentLevel,
                     currentArea: World.currentArea,
@@ -367,25 +441,180 @@ const Game = {
                 Fairy.speak("Game saved!");
                 break;
 
-            case 2: // Quit to Menu
+            case 4: // Quit to Menu
                 Audio.stopMusic();
                 this.state = 'menu';
                 break;
         }
     },
 
-    showGameComplete: function() {
-        this.state = 'victory';
+    openShop: function() {
+        this.state = 'shop';
+        this.shopSelection = 0;
+        this.updateShopItems();
+        Audio.menuSelect();
+    },
+
+    updateShopItems: function() {
+        const swordPrice = Math.floor(CONSTANTS.SHOP_PRICES.SWORD_BASE * Math.pow(CONSTANTS.SHOP_PRICES.SWORD_MULTIPLIER, Player.equipment.swordLevel - 1));
+        const shieldPrice = Math.floor(CONSTANTS.SHOP_PRICES.SHIELD_BASE * Math.pow(CONSTANTS.SHOP_PRICES.SHIELD_MULTIPLIER, Player.equipment.shieldLevel - 1));
+
+        this.shopItems = [
+            { name: `Upgrade Sword (Lv.${Player.equipment.swordLevel + 1})`, price: swordPrice, action: 'sword' },
+            { name: `Upgrade Shield (Lv.${Player.equipment.shieldLevel + 1})`, price: shieldPrice, action: 'shield' },
+            { name: 'Health Potion', price: CONSTANTS.SHOP_PRICES.HEALTH_POTION, action: 'health_potion' },
+            { name: 'Mana Potion', price: CONSTANTS.SHOP_PRICES.MANA_POTION, action: 'mana_potion' },
+            { name: 'Mega Potion (Full Restore)', price: CONSTANTS.SHOP_PRICES.MEGA_POTION, action: 'mega_potion' },
+            { name: 'Secret Key', price: CONSTANTS.SHOP_PRICES.KEY_PRICE, action: 'key' },
+            { name: 'Close Shop', price: 0, action: 'close' }
+        ];
+
+        // Add spell unlocks
+        const unlearnedSpells = Player.availableSpells.filter(s => !Player.learnedSpells.includes(s));
+        unlearnedSpells.slice(0, 3).forEach((spell, i) => {
+            const spellPrice = Math.floor(CONSTANTS.SHOP_PRICES.SPELL_UNLOCK_BASE * Math.pow(CONSTANTS.SHOP_PRICES.SPELL_UNLOCK_MULTIPLIER, i));
+            this.shopItems.splice(-1, 0, {
+                name: `Learn ${spell.charAt(0).toUpperCase() + spell.slice(1)} Spell`,
+                price: spellPrice,
+                action: `spell_${spell}`
+            });
+        });
+    },
+
+    updateShop: function() {
+        if (Input.wasJustPressed('Escape')) {
+            this.state = 'paused';
+            Audio.menuSelect();
+            return;
+        }
+
+        if (Input.wasJustPressed('ArrowUp') || Input.wasJustPressed('KeyW')) {
+            this.shopSelection = (this.shopSelection - 1 + this.shopItems.length) % this.shopItems.length;
+            Audio.menuSelect();
+        }
+
+        if (Input.wasJustPressed('ArrowDown') || Input.wasJustPressed('KeyS')) {
+            this.shopSelection = (this.shopSelection + 1) % this.shopItems.length;
+            Audio.menuSelect();
+        }
+
+        if (Input.wasJustPressed('Space') || Input.wasJustPressed('Enter')) {
+            this.purchaseShopItem();
+        }
+    },
+
+    purchaseShopItem: function() {
+        const item = this.shopItems[this.shopSelection];
+
+        if (item.action === 'close') {
+            this.state = 'paused';
+            Audio.menuSelect();
+            return;
+        }
+
+        if (Player.spendCoins(item.price)) {
+            Audio.shopPurchase();
+
+            switch (item.action) {
+                case 'sword':
+                    Player.equipment.swordLevel++;
+                    Player.updateSwordTier();
+                    break;
+
+                case 'shield':
+                    Player.equipment.shieldLevel++;
+                    Player.updateShieldTier();
+                    break;
+
+                case 'health_potion':
+                    Player.potions.health++;
+                    break;
+
+                case 'mana_potion':
+                    Player.potions.mana++;
+                    break;
+
+                case 'mega_potion':
+                    Player.potions.mega++;
+                    break;
+
+                case 'key':
+                    Player.keys++;
+                    break;
+
+                default:
+                    if (item.action.startsWith('spell_')) {
+                        const spellName = item.action.replace('spell_', '');
+                        Player.learnSpell(spellName);
+                        Audio.spellLearn();
+                    }
+            }
+
+            this.updateShopItems();
+        } else {
+            Audio.playerHurt();
+        }
+    },
+
+    openSkills: function() {
+        this.state = 'skills';
+        this.skillSelection = 0;
+        this.updateSkillOptions();
+        Audio.menuSelect();
+    },
+
+    updateSkillOptions: function() {
+        this.skillOptions = Object.keys(Player.skills).map(skillName => ({
+            name: skillName.replace(/([A-Z])/g, ' $1').trim(),
+            key: skillName,
+            level: Player.skills[skillName],
+            maxLevel: 10
+        }));
+        this.skillOptions.push({ name: 'Close', key: 'close', level: 0, maxLevel: 0 });
+    },
+
+    updateSkills: function() {
+        if (Input.wasJustPressed('Escape')) {
+            this.state = 'paused';
+            Audio.menuSelect();
+            return;
+        }
+
+        if (Input.wasJustPressed('ArrowUp') || Input.wasJustPressed('KeyW')) {
+            this.skillSelection = (this.skillSelection - 1 + this.skillOptions.length) % this.skillOptions.length;
+            Audio.menuSelect();
+        }
+
+        if (Input.wasJustPressed('ArrowDown') || Input.wasJustPressed('KeyS')) {
+            this.skillSelection = (this.skillSelection + 1) % this.skillOptions.length;
+            Audio.menuSelect();
+        }
+
+        if (Input.wasJustPressed('Space') || Input.wasJustPressed('Enter')) {
+            const skill = this.skillOptions[this.skillSelection];
+            if (skill.key === 'close') {
+                this.state = 'paused';
+                Audio.menuSelect();
+            } else if (Player.spendSkillPoint(skill.key)) {
+                Audio.levelUp();
+                this.updateSkillOptions();
+            } else {
+                Audio.playerHurt();
+            }
+        }
     },
 
     render: function() {
-        // Clear canvas
         this.ctx.fillStyle = '#000000';
         this.ctx.fillRect(0, 0, CONSTANTS.CANVAS_WIDTH, CONSTANTS.CANVAS_HEIGHT);
 
         switch (this.state) {
             case 'menu':
                 this.renderMenu();
+                break;
+
+            case 'character_select':
+                this.renderCharacterSelect();
                 break;
 
             case 'playing':
@@ -397,6 +626,16 @@ const Game = {
             case 'paused':
                 this.renderGame();
                 this.renderPauseMenu();
+                break;
+
+            case 'shop':
+                this.renderGame();
+                this.renderShop();
+                break;
+
+            case 'skills':
+                this.renderGame();
+                this.renderSkills();
                 break;
 
             case 'game_over':
@@ -412,18 +651,23 @@ const Game = {
     renderMenu: function() {
         const ctx = this.ctx;
 
-        // Title
         ctx.fillStyle = '#FFD700';
         ctx.font = '48px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('CAPTAIN ARCSIS', CONSTANTS.CANVAS_WIDTH / 2, 150);
+        ctx.fillText('CAPTAIN ARCSIS', CONSTANTS.CANVAS_WIDTH / 2, 120);
 
-        // Subtitle
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '16px monospace';
-        ctx.fillText('An 8-Bit Dungeon Adventure', CONSTANTS.CANVAS_WIDTH / 2, 190);
+        ctx.fillText('ENHANCED EDITION', CONSTANTS.CANVAS_WIDTH / 2, 160);
 
-        // Menu options
+        ctx.font = '12px monospace';
+        ctx.fillStyle = '#FFD700';
+        ctx.fillText('Yellow | Red | Green | Blue', CONSTANTS.CANVAS_WIDTH / 2, 190);
+        ctx.fillStyle = '#FF0000';
+        ctx.fillText('Infinite Sword & Shield Evolution!', CONSTANTS.CANVAS_WIDTH / 2, 210);
+        ctx.fillStyle = '#FF00FF';
+        ctx.fillText('ANIZON: Progressive Boss with Friends & Secrets!', CONSTANTS.CANVAS_WIDTH / 2, 230);
+
         ctx.font = '24px monospace';
         this.menuOptions.forEach((option, i) => {
             if (i === this.menuSelection) {
@@ -435,7 +679,6 @@ const Game = {
             }
         });
 
-        // Save info
         if (SaveSystem.hasSaveData()) {
             const info = SaveSystem.getSaveInfo();
             if (info) {
@@ -446,53 +689,111 @@ const Game = {
             }
         }
 
-        // Version info
         ctx.font = '12px monospace';
         ctx.fillStyle = '#666666';
         ctx.textAlign = 'right';
-        ctx.fillText('v1.0.0 - Captain Arcsis Core', CONSTANTS.CANVAS_WIDTH - 10, CONSTANTS.CANVAS_HEIGHT - 10);
+        ctx.fillText('v2.0.0 - Enhanced Edition', CONSTANTS.CANVAS_WIDTH - 10, CONSTANTS.CANVAS_HEIGHT - 10);
         ctx.textAlign = 'left';
-        ctx.fillText('Yellow | Red | Green | Blue - Coming Soon!', 10, CONSTANTS.CANVAS_HEIGHT - 10);
+        ctx.fillText('Press B for Shop | K for Skills', 10, CONSTANTS.CANVAS_HEIGHT - 10);
+    },
+
+    renderCharacterSelect: function() {
+        const ctx = this.ctx;
+
+        ctx.fillStyle = '#FFD700';
+        ctx.font = '36px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('SELECT YOUR ARCSIS', CONSTANTS.CANVAS_WIDTH / 2, 80);
+
+        const cardWidth = 150;
+        const cardHeight = 250;
+        const startX = (CONSTANTS.CANVAS_WIDTH - cardWidth * 4 - 30) / 2;
+
+        this.characterOptions.forEach((type, i) => {
+            const x = startX + i * (cardWidth + 10);
+            const y = 120;
+            const typeData = CONSTANTS.ARCSIS_TYPES[type];
+            const isSelected = i === this.characterSelection;
+
+            // Card background
+            ctx.fillStyle = isSelected ? typeData.color : '#333333';
+            ctx.globalAlpha = isSelected ? 0.8 : 0.4;
+            ctx.fillRect(x, y, cardWidth, cardHeight);
+            ctx.globalAlpha = 1;
+
+            // Border
+            ctx.strokeStyle = isSelected ? '#FFFFFF' : '#666666';
+            ctx.lineWidth = isSelected ? 4 : 2;
+            ctx.strokeRect(x, y, cardWidth, cardHeight);
+
+            // Character preview
+            ctx.save();
+            ctx.translate(x + cardWidth / 2 - 16, y + 40);
+            const previewEquipment = { swordLevel: 1, shieldLevel: 1, swordRarity: 'COMMON', shieldRarity: 'COMMON' };
+            Sprites.drawArcsis(ctx, 0, 0, 'down', 0, previewEquipment, type);
+            ctx.restore();
+
+            // Type name
+            ctx.fillStyle = typeData.color;
+            ctx.font = 'bold 18px monospace';
+            ctx.fillText(type, x + cardWidth / 2, y + 120);
+
+            // Specialty
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '14px monospace';
+            ctx.fillText(typeData.specialty, x + cardWidth / 2, y + 145);
+
+            // Description (wrapped)
+            ctx.font = '10px monospace';
+            const words = typeData.description.split(' ');
+            let line = '';
+            let lineY = y + 170;
+            words.forEach(word => {
+                const testLine = line + word + ' ';
+                if (ctx.measureText(testLine).width > cardWidth - 10) {
+                    ctx.fillText(line, x + cardWidth / 2, lineY);
+                    line = word + ' ';
+                    lineY += 14;
+                } else {
+                    line = testLine;
+                }
+            });
+            ctx.fillText(line, x + cardWidth / 2, lineY);
+
+            // Stats preview
+            ctx.fillStyle = '#00FF00';
+            ctx.font = '11px monospace';
+            ctx.fillText(`ATK: ${typeData.bonuses.baseAttack || 10}`, x + cardWidth / 2, y + 220);
+            ctx.fillText(`DEF: ${typeData.bonuses.baseDefense || 5}`, x + cardWidth / 2, y + 235);
+        });
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '16px monospace';
+        ctx.fillText('Use LEFT/RIGHT to select, SPACE to confirm', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT - 50);
+        ctx.fillText('Press ESC to go back', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT - 25);
     },
 
     renderGame: function() {
         const ctx = this.ctx;
 
-        // Draw world
         World.draw(ctx);
-
-        // Draw puzzle elements
         Puzzles.draw(ctx);
-
-        // Draw enemies
         Enemies.draw(ctx);
-
-        // Draw player
         Player.draw(ctx);
-
-        // Draw fairy
         Fairy.draw(ctx);
-
-        // Draw bosses
         Bosses.draw(ctx);
-
-        // Draw combat effects
         Combat.draw(ctx);
 
-        // Draw UI
         this.renderUI();
 
-        // Draw dialogue
         if (this.state === 'dialogue') {
             Dialogue.draw(ctx);
         }
 
-        // Boss intro screen
         if (this.state === 'boss_intro') {
             this.renderBossIntro();
         }
 
-        // Draw inventory
         if (this.showInventory) {
             this.renderInventory();
         }
@@ -560,6 +861,16 @@ const Game = {
             ctx.fillText('DASH READY! (Q)', 10, 84);
         }
 
+        // Arcsis type indicator
+        if (CONSTANTS.ARCSIS_TYPES && Player.arcsisType) {
+            const typeColor = CONSTANTS.ARCSIS_TYPES[Player.arcsisType].color;
+            ctx.fillStyle = typeColor;
+            ctx.fillRect(220, 10, 60, 20);
+            ctx.fillStyle = '#000000';
+            ctx.font = '10px monospace';
+            ctx.fillText(Player.arcsisType, 225, 23);
+        }
+
         // Fairy mana bar (if has fairy)
         const manaY = 100;
         if (Player.hasFairy) {
@@ -582,29 +893,53 @@ const Game = {
         ctx.strokeStyle = '#00FF00';
         ctx.strokeRect(10, expY + 2, 150, 14);
         ctx.fillStyle = '#00FF00';
+        ctx.font = '12px monospace';
         ctx.fillText(`LV ${Player.level} - ${Player.exp}/${Player.expToNext}`, 15, expY + 14);
 
         // Coins
         ctx.fillStyle = '#FFD700';
-        ctx.fillText(`COINS: ${Player.coins}`, 10, expY + 36);
+        ctx.fillText(`COINS: ${Utils.formatNumber(Player.coins)}`, 10, expY + 36);
 
         // Keys
-        if (Player.keys > 0) {
-            ctx.fillStyle = '#FFD700';
-            ctx.fillText(`KEYS: ${Player.keys}`, 10, expY + 52);
+        ctx.fillStyle = '#FFD700';
+        ctx.fillText(`KEYS: ${Player.keys} | SECRET: ${Player.secretKeys}`, 10, expY + 52);
+
+        // Potions
+        ctx.fillStyle = '#FF6666';
+        ctx.fillText(`HP:${Player.potions.health} MP:${Player.potions.mana} MEGA:${Player.potions.mega}`, 10, expY + 68);
+
+        // Skill points
+        if (Player.skillPoints > 0) {
+            ctx.fillStyle = '#FFFF00';
+            ctx.fillText(`SKILL POINTS: ${Player.skillPoints}`, 10, expY + 84);
         }
 
         // Max combo display
         if (Player.maxCombo > 1) {
             ctx.fillStyle = '#FF00FF';
-            ctx.fillText(`MAX COMBO: ${Player.maxCombo}x`, 10, expY + 68);
+            ctx.fillText(`MAX COMBO: ${Player.maxCombo}x`, 10, expY + 100);
         }
 
-        // Equipment info (top right)
+        // Equipment info with rarity (top right)
         ctx.textAlign = 'right';
+        const swordRarityColor = CONSTANTS.RARITY[Player.equipment.swordRarity].color;
+        const shieldRarityColor = CONSTANTS.RARITY[Player.equipment.shieldRarity].color;
+
+        ctx.fillStyle = swordRarityColor;
+        ctx.fillText(`${Player.equipment.swordName}`, CONSTANTS.CANVAS_WIDTH - 10, 26);
         ctx.fillStyle = '#FFFFFF';
-        ctx.fillText(`SWORD LV: ${Player.equipment.swordLevel}`, CONSTANTS.CANVAS_WIDTH - 10, 26);
-        ctx.fillText(`SHIELD LV: ${Player.equipment.shieldLevel}`, CONSTANTS.CANVAS_WIDTH - 10, 46);
+        ctx.fillText(`SWORD LV: ${Player.equipment.swordLevel}`, CONSTANTS.CANVAS_WIDTH - 10, 42);
+
+        ctx.fillStyle = shieldRarityColor;
+        ctx.fillText(`${Player.equipment.shieldName}`, CONSTANTS.CANVAS_WIDTH - 10, 62);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(`SHIELD LV: ${Player.equipment.shieldLevel}`, CONSTANTS.CANVAS_WIDTH - 10, 78);
+
+        // Anizon defeat counter
+        if (Player.anizonDefeats > 0) {
+            ctx.fillStyle = '#FF0000';
+            ctx.fillText(`ANIZON DEFEATS: ${Player.anizonDefeats}`, CONSTANTS.CANVAS_WIDTH - 10, 98);
+        }
 
         // Power-up status
         let powerUpY = 66;
@@ -635,12 +970,16 @@ const Game = {
         ctx.fillStyle = '#888888';
         ctx.fillText(Utils.formatTime(this.playTime / 1000), CONSTANTS.CANVAS_WIDTH - 10, CONSTANTS.CANVAS_HEIGHT - 10);
 
+        // Controls reminder
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#666666';
+        ctx.fillText('B:Shop K:Skills 1:HP 2:MP 3:Mega', 10, CONSTANTS.CANVAS_HEIGHT - 10);
+
         // Enemy count
         const enemyCount = Enemies.getCount();
         if (enemyCount > 0) {
-            ctx.textAlign = 'left';
             ctx.fillStyle = '#FF6666';
-            ctx.fillText(`Enemies: ${enemyCount}`, 10, CONSTANTS.CANVAS_HEIGHT - 10);
+            ctx.fillText(`Enemies: ${enemyCount}`, 10, CONSTANTS.CANVAS_HEIGHT - 26);
         }
     },
 
@@ -665,28 +1004,117 @@ const Game = {
         ctx.restore();
     },
 
+    renderShop: function() {
+        const ctx = this.ctx;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.fillRect(0, 0, CONSTANTS.CANVAS_WIDTH, CONSTANTS.CANVAS_HEIGHT);
+
+        ctx.fillStyle = '#FFD700';
+        ctx.font = '36px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('EQUIPMENT SHOP', CONSTANTS.CANVAS_WIDTH / 2, 60);
+
+        ctx.fillStyle = '#FFD700';
+        ctx.font = '20px monospace';
+        ctx.fillText(`Your Coins: ${Utils.formatNumber(Player.coins)}`, CONSTANTS.CANVAS_WIDTH / 2, 100);
+
+        ctx.font = '16px monospace';
+        this.shopItems.forEach((item, i) => {
+            const y = 150 + i * 35;
+            const canAfford = Player.coins >= item.price;
+
+            if (i === this.shopSelection) {
+                ctx.fillStyle = '#FFFF00';
+                ctx.fillText('> ', CONSTANTS.CANVAS_WIDTH / 2 - 200, y);
+            }
+
+            ctx.fillStyle = canAfford ? '#FFFFFF' : '#666666';
+            ctx.textAlign = 'left';
+            ctx.fillText(item.name, CONSTANTS.CANVAS_WIDTH / 2 - 180, y);
+
+            if (item.price > 0) {
+                ctx.textAlign = 'right';
+                ctx.fillStyle = canAfford ? '#FFD700' : '#666666';
+                ctx.fillText(`${Utils.formatNumber(item.price)} coins`, CONSTANTS.CANVAS_WIDTH / 2 + 200, y);
+            }
+        });
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#888888';
+        ctx.font = '14px monospace';
+        ctx.fillText('SPACE to purchase, ESC to close', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT - 30);
+    },
+
+    renderSkills: function() {
+        const ctx = this.ctx;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.fillRect(0, 0, CONSTANTS.CANVAS_WIDTH, CONSTANTS.CANVAS_HEIGHT);
+
+        ctx.fillStyle = '#00FF00';
+        ctx.font = '36px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('SKILL TREE', CONSTANTS.CANVAS_WIDTH / 2, 60);
+
+        ctx.fillStyle = '#FFFF00';
+        ctx.font = '20px monospace';
+        ctx.fillText(`Skill Points: ${Player.skillPoints}`, CONSTANTS.CANVAS_WIDTH / 2, 100);
+
+        ctx.font = '14px monospace';
+        this.skillOptions.forEach((skill, i) => {
+            const y = 140 + i * 30;
+            const isMaxed = skill.level >= skill.maxLevel;
+
+            if (i === this.skillSelection) {
+                ctx.fillStyle = '#FFFF00';
+                ctx.fillText('> ', CONSTANTS.CANVAS_WIDTH / 2 - 250, y);
+            }
+
+            ctx.fillStyle = isMaxed ? '#00FF00' : '#FFFFFF';
+            ctx.textAlign = 'left';
+            ctx.fillText(skill.name, CONSTANTS.CANVAS_WIDTH / 2 - 230, y);
+
+            if (skill.maxLevel > 0) {
+                ctx.textAlign = 'right';
+                ctx.fillStyle = isMaxed ? '#00FF00' : '#888888';
+
+                // Level bar
+                let levelBar = '[';
+                for (let j = 0; j < skill.maxLevel; j++) {
+                    levelBar += j < skill.level ? '=' : '-';
+                }
+                levelBar += `] ${skill.level}/${skill.maxLevel}`;
+
+                ctx.fillText(levelBar, CONSTANTS.CANVAS_WIDTH / 2 + 250, y);
+            }
+        });
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#888888';
+        ctx.font = '14px monospace';
+        ctx.fillText('SPACE to upgrade, ESC to close', CONSTANTS.CANVAS_WIDTH / 2, CONSTANTS.CANVAS_HEIGHT - 30);
+    },
+
     renderPauseMenu: function() {
         const ctx = this.ctx;
 
-        // Darken background
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.fillRect(0, 0, CONSTANTS.CANVAS_WIDTH, CONSTANTS.CANVAS_HEIGHT);
 
-        // Pause title
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '36px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('PAUSED', CONSTANTS.CANVAS_WIDTH / 2, 200);
+        ctx.fillText('PAUSED', CONSTANTS.CANVAS_WIDTH / 2, 180);
 
-        // Menu options
         ctx.font = '20px monospace';
         this.pauseOptions.forEach((option, i) => {
             if (i === this.pauseSelection) {
                 ctx.fillStyle = '#FFFF00';
-                ctx.fillText('> ' + option + ' <', CONSTANTS.CANVAS_WIDTH / 2, 280 + i * 40);
+                ctx.fillText('> ' + option + ' <', CONSTANTS.CANVAS_WIDTH / 2, 250 + i * 40);
             } else {
                 ctx.fillStyle = '#FFFFFF';
-                ctx.fillText(option, CONSTANTS.CANVAS_WIDTH / 2, 280 + i * 40);
+                ctx.fillText(option, CONSTANTS.CANVAS_WIDTH / 2, 250 + i * 40);
             }
         });
     },
@@ -694,9 +1122,8 @@ const Game = {
     renderInventory: function() {
         const ctx = this.ctx;
 
-        // Inventory window
-        const invWidth = 400;
-        const invHeight = 350;
+        const invWidth = 450;
+        const invHeight = 400;
         const invX = (CONSTANTS.CANVAS_WIDTH - invWidth) / 2;
         const invY = (CONSTANTS.CANVAS_HEIGHT - invHeight) / 2;
 
@@ -706,47 +1133,46 @@ const Game = {
         ctx.lineWidth = 3;
         ctx.strokeRect(invX, invY, invWidth, invHeight);
 
-        // Title
         ctx.fillStyle = '#FFD700';
         ctx.font = '24px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('INVENTORY', CONSTANTS.CANVAS_WIDTH / 2, invY + 35);
+        ctx.fillText('CAPTAIN ARCSIS - ' + Player.arcsisType, CONSTANTS.CANVAS_WIDTH / 2, invY + 35);
 
-        // Stats
-        ctx.font = '16px monospace';
+        ctx.font = '14px monospace';
         ctx.fillStyle = '#FFFFFF';
         ctx.textAlign = 'left';
 
         const statX = invX + 30;
-        let statY = invY + 80;
+        let statY = invY + 70;
 
-        ctx.fillText(`Level: ${Player.level}`, statX, statY);
-        statY += 25;
-        ctx.fillText(`HP: ${Math.floor(Player.hp)}/${Player.maxHp}`, statX, statY);
-        statY += 25;
-        ctx.fillText(`Attack: ${Player.attack}`, statX, statY);
-        statY += 25;
-        ctx.fillText(`Defense: ${Player.defense}`, statX, statY);
-        statY += 25;
-        ctx.fillText(`Coins: ${Player.coins}`, statX, statY);
-        statY += 25;
-        ctx.fillText(`Keys: ${Player.keys}`, statX, statY);
+        ctx.fillText(`Level: ${Player.level}`, statX, statY); statY += 22;
+        ctx.fillText(`HP: ${Math.floor(Player.hp)}/${Player.maxHp}`, statX, statY); statY += 22;
+        ctx.fillText(`Attack: ${Player.attack}`, statX, statY); statY += 22;
+        ctx.fillText(`Defense: ${Player.defense}`, statX, statY); statY += 22;
+        ctx.fillText(`Crit Chance: ${Player.critChance}%`, statX, statY); statY += 22;
+        ctx.fillText(`Dodge Chance: ${Player.dodgeChance}%`, statX, statY); statY += 22;
+        ctx.fillText(`Coins: ${Utils.formatNumber(Player.coins)}`, statX, statY); statY += 22;
+        ctx.fillText(`Keys: ${Player.keys} | Secret Keys: ${Player.secretKeys}`, statX, statY); statY += 30;
 
-        // Equipment
-        statY += 40;
         ctx.fillStyle = '#FFD700';
-        ctx.fillText('EQUIPMENT:', statX, statY);
-        ctx.fillStyle = '#FFFFFF';
-        statY += 25;
-        ctx.fillText(`Sword Level: ${Player.equipment.swordLevel}/10`, statX, statY);
-        statY += 20;
-        ctx.fillText(`  EXP: ${Player.equipment.swordExp}/${Player.equipment.swordExpToNext}`, statX, statY);
-        statY += 25;
-        ctx.fillText(`Shield Level: ${Player.equipment.shieldLevel}/10`, statX, statY);
-        statY += 20;
-        ctx.fillText(`  EXP: ${Player.equipment.shieldExp}/${Player.equipment.shieldExpToNext}`, statX, statY);
+        ctx.fillText('EQUIPMENT:', statX, statY); statY += 22;
+        ctx.fillStyle = CONSTANTS.RARITY[Player.equipment.swordRarity].color;
+        ctx.fillText(`${Player.equipment.swordName} (Lv.${Player.equipment.swordLevel})`, statX, statY); statY += 22;
+        ctx.fillStyle = CONSTANTS.RARITY[Player.equipment.shieldRarity].color;
+        ctx.fillText(`${Player.equipment.shieldName} (Lv.${Player.equipment.shieldLevel})`, statX, statY); statY += 30;
 
-        // Close instruction
+        ctx.fillStyle = '#FF69B4';
+        ctx.fillText('LEARNED SPELLS:', statX, statY); statY += 22;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(Player.learnedSpells.join(', '), statX, statY); statY += 30;
+
+        ctx.fillStyle = '#FF0000';
+        ctx.fillText(`ANIZON DEFEATS: ${Player.anizonDefeats}`, statX, statY); statY += 22;
+        if (Player.anizonFriends.length > 0) {
+            ctx.fillStyle = '#9400D3';
+            ctx.fillText(`Friends: ${Player.anizonFriends.join(', ')}`, statX, statY);
+        }
+
         ctx.fillStyle = '#888888';
         ctx.textAlign = 'center';
         ctx.font = '14px monospace';
@@ -768,13 +1194,22 @@ const Game = {
             ctx.fillStyle = '#FFFFFF';
             ctx.font = '24px monospace';
             ctx.fillText(Bosses.currentBoss.name, CONSTANTS.CANVAS_WIDTH / 2, 280);
+
+            if (Bosses.currentBoss.type === 'anizon') {
+                ctx.fillStyle = '#FFD700';
+                ctx.font = '18px monospace';
+                ctx.fillText(`HP: ${Utils.formatNumber(Bosses.currentBoss.maxHp)}`, CONSTANTS.CANVAS_WIDTH / 2, 320);
+                ctx.fillText(`ATK: ${Bosses.currentBoss.attack} | DEF: ${Bosses.currentBoss.defense}`, CONSTANTS.CANVAS_WIDTH / 2, 345);
+                ctx.fillStyle = '#FF0000';
+                ctx.fillText('PREPARE FOR AN INCREDIBLE CHALLENGE!', CONSTANTS.CANVAS_WIDTH / 2, 380);
+            }
         }
 
         ctx.fillStyle = '#FFFF00';
         ctx.font = '16px monospace';
         const blink = Math.floor(Date.now() / 500) % 2;
         if (blink) {
-            ctx.fillText('Press SPACE to begin!', CONSTANTS.CANVAS_WIDTH / 2, 400);
+            ctx.fillText('Press SPACE to begin!', CONSTANTS.CANVAS_WIDTH / 2, 450);
         }
     },
 
@@ -787,26 +1222,27 @@ const Game = {
         ctx.fillStyle = '#FF0000';
         ctx.font = '48px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('GAME OVER', CONSTANTS.CANVAS_WIDTH / 2, 250);
+        ctx.fillText('GAME OVER', CONSTANTS.CANVAS_WIDTH / 2, 200);
 
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '20px monospace';
-        ctx.fillText(`Level: ${Player.level}`, CONSTANTS.CANVAS_WIDTH / 2, 320);
-        ctx.fillText(`Coins Collected: ${Player.coins}`, CONSTANTS.CANVAS_WIDTH / 2, 350);
-        ctx.fillText(`Time: ${Utils.formatTime(this.playTime / 1000)}`, CONSTANTS.CANVAS_WIDTH / 2, 380);
+        ctx.fillText(`Arcsis Type: ${Player.arcsisType}`, CONSTANTS.CANVAS_WIDTH / 2, 270);
+        ctx.fillText(`Level: ${Player.level}`, CONSTANTS.CANVAS_WIDTH / 2, 300);
+        ctx.fillText(`Coins: ${Utils.formatNumber(Player.coins)}`, CONSTANTS.CANVAS_WIDTH / 2, 330);
+        ctx.fillText(`Anizon Defeats: ${Player.anizonDefeats}`, CONSTANTS.CANVAS_WIDTH / 2, 360);
+        ctx.fillText(`Time: ${Utils.formatTime(this.playTime / 1000)}`, CONSTANTS.CANVAS_WIDTH / 2, 390);
 
         ctx.fillStyle = '#FFFF00';
         ctx.font = '16px monospace';
         const blink = Math.floor(Date.now() / 500) % 2;
         if (blink) {
-            ctx.fillText('Press SPACE to return to menu', CONSTANTS.CANVAS_WIDTH / 2, 450);
+            ctx.fillText('Press SPACE to return to menu', CONSTANTS.CANVAS_WIDTH / 2, 480);
         }
     },
 
     renderVictory: function() {
         const ctx = this.ctx;
 
-        // Animated background
         const time = Date.now() * 0.001;
         const r = Math.floor(128 + Math.sin(time) * 64);
         const g = Math.floor(128 + Math.sin(time + 2) * 64);
@@ -817,23 +1253,25 @@ const Game = {
         ctx.fillStyle = '#FFD700';
         ctx.font = '48px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('VICTORY!', CONSTANTS.CANVAS_WIDTH / 2, 150);
+        ctx.fillText('VICTORY!', CONSTANTS.CANVAS_WIDTH / 2, 120);
 
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '24px monospace';
-        ctx.fillText('Captain Arcsis has saved the day!', CONSTANTS.CANVAS_WIDTH / 2, 220);
+        ctx.fillText(`Captain Arcsis ${Player.arcsisType} saves the day!`, CONSTANTS.CANVAS_WIDTH / 2, 180);
 
-        ctx.font = '18px monospace';
-        ctx.fillText(`Final Level: ${Player.level}`, CONSTANTS.CANVAS_WIDTH / 2, 300);
-        ctx.fillText(`Total Coins: ${Player.coins}`, CONSTANTS.CANVAS_WIDTH / 2, 330);
-        ctx.fillText(`Time: ${Utils.formatTime(this.playTime / 1000)}`, CONSTANTS.CANVAS_WIDTH / 2, 360);
-        ctx.fillText(`Sword Level: ${Player.equipment.swordLevel}`, CONSTANTS.CANVAS_WIDTH / 2, 390);
-        ctx.fillText(`Shield Level: ${Player.equipment.shieldLevel}`, CONSTANTS.CANVAS_WIDTH / 2, 420);
+        ctx.font = '16px monospace';
+        ctx.fillText(`Final Level: ${Player.level}`, CONSTANTS.CANVAS_WIDTH / 2, 250);
+        ctx.fillText(`Total Coins: ${Utils.formatNumber(Player.coins)}`, CONSTANTS.CANVAS_WIDTH / 2, 280);
+        ctx.fillText(`Anizon Defeated: ${Player.anizonDefeats} times!`, CONSTANTS.CANVAS_WIDTH / 2, 310);
+        ctx.fillText(`Sword: ${Player.equipment.swordName} (Lv.${Player.equipment.swordLevel})`, CONSTANTS.CANVAS_WIDTH / 2, 340);
+        ctx.fillText(`Shield: ${Player.equipment.shieldName} (Lv.${Player.equipment.shieldLevel})`, CONSTANTS.CANVAS_WIDTH / 2, 370);
+        ctx.fillText(`Friends Unlocked: ${Player.anizonFriends.join(', ') || 'None'}`, CONSTANTS.CANVAS_WIDTH / 2, 400);
+        ctx.fillText(`Secret Keys: ${Player.secretKeys}`, CONSTANTS.CANVAS_WIDTH / 2, 430);
+        ctx.fillText(`Time: ${Utils.formatTime(this.playTime / 1000)}`, CONSTANTS.CANVAS_WIDTH / 2, 460);
 
         ctx.fillStyle = '#FFD700';
-        ctx.font = '16px monospace';
-        ctx.fillText('More adventures await in:', CONSTANTS.CANVAS_WIDTH / 2, 480);
-        ctx.fillText('Captain Arcsis Yellow | Red | Green | Blue', CONSTANTS.CANVAS_WIDTH / 2, 505);
+        ctx.font = '14px monospace';
+        ctx.fillText('Challenge continues! Defeat more Anizons!', CONSTANTS.CANVAS_WIDTH / 2, 510);
 
         ctx.fillStyle = '#FFFFFF';
         const blink = Math.floor(Date.now() / 500) % 2;
@@ -843,7 +1281,6 @@ const Game = {
     }
 };
 
-// Start the game when page loads
 window.onload = function() {
     Game.init();
 };

@@ -552,6 +552,104 @@ const World = {
         }
     },
 
+    // Generate INFINITE procedural dungeon levels!
+    generateDungeonLevel: function(levelNumber) {
+        const areaName = `dungeon_${levelNumber}`;
+
+        // Create procedural dungeon area
+        const newArea = {
+            name: `Dark Dungeon - Level ${levelNumber}`,
+            width: 25,
+            height: 18,
+            music: 'dungeon',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+
+                // Base floor/wall setup
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+
+                // Procedurally add walls based on level number
+                const numWalls = 10 + levelNumber * 2;
+                for (let i = 0; i < numWalls; i++) {
+                    const wx = Utils.random(3, 21);
+                    const wy = Utils.random(3, 14);
+                    const length = Utils.random(2, 5);
+                    const horizontal = Math.random() > 0.5;
+
+                    for (let j = 0; j < length; j++) {
+                        const nx = horizontal ? wx + j : wx;
+                        const ny = horizontal ? wy : wy + j;
+                        if (nx >= 1 && nx < 24 && ny >= 1 && ny < 17) {
+                            map[ny][nx] = 'wall';
+                            collisions[ny][nx] = 1;
+                        }
+                    }
+                }
+
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 64, y: 300 },
+            enemies: [],
+            puzzleElements: [],
+            boss: 'anizon', // ANIZON APPEARS EVERY LEVEL!
+            nextArea: `dungeon_${levelNumber + 1}`
+        };
+
+        // Generate scaling enemies based on level
+        const enemyTypes = ['zombie', 'dark_slime', 'dungeon_bat', 'skeleton_knight', 'ghost_warrior', 'armored_golem'];
+        const numEnemies = Math.min(3 + Math.floor(levelNumber / 2), 10);
+
+        for (let i = 0; i < numEnemies; i++) {
+            const typeIndex = Math.min(Math.floor(levelNumber / 3) + Utils.random(0, 2), enemyTypes.length - 1);
+            newArea.enemies.push({
+                type: enemyTypes[typeIndex],
+                x: Utils.random(100, 650),
+                y: Utils.random(100, 450)
+            });
+        }
+
+        // Add puzzle elements
+        const numChests = Math.min(levelNumber, 5);
+        for (let i = 0; i < numChests; i++) {
+            newArea.puzzleElements.push({
+                type: 'chest',
+                x: Utils.random(100, 700),
+                y: Utils.random(100, 450),
+                id: `d${levelNumber}_chest${i}`,
+                contents: { type: 'coins', amount: 20 + levelNumber * 10 }
+            });
+        }
+
+        // Add secret doors for Anizon's keys
+        if (levelNumber >= 2) {
+            newArea.puzzleElements.push({
+                type: 'door',
+                x: Utils.random(100, 700),
+                y: Utils.random(100, 450),
+                id: `secret_door_${levelNumber}`,
+                requiresKey: true
+            });
+        }
+
+        this.areas[areaName] = newArea;
+        return newArea;
+    },
+
     loadArea: function(areaName) {
         const area = this.areas[areaName];
         if (!area) return false;
