@@ -1205,6 +1205,7 @@ const Player = {
 
     // Anizon progression
     onAnizonDefeat: function() {
+        console.log('[DEBUG] onAnizonDefeat called. Current defeats:', this.anizonDefeats);
         this.anizonDefeats++;
 
         // Unlock Anizon friends
@@ -1212,20 +1213,24 @@ const Player = {
         if (this.anizonDefeats <= friends.length) {
             const newFriend = friends[this.anizonDefeats - 1];
             this.anizonFriends.push(newFriend);
+            console.log('[DEBUG] Unlocked friend:', newFriend);
         }
 
         // Grant the Anizon Heart Key on first defeat
         if (!this.hasAnizonHeartKey) {
             this.hasAnizonHeartKey = true;
             Fairy.speak("You obtained the Anizon Heart Key! You can now free your mom!");
+            console.log('[DEBUG] Granted Anizon Heart Key');
         }
 
         // Drop special keys
         this.secretKeys += this.anizonDefeats;
+        console.log('[DEBUG] Added secret keys. Total:', this.secretKeys);
 
         // Massive exp and coin reward
         const expReward = 1000 * Math.pow(2, this.anizonDefeats - 1);
         const coinReward = 500 * Math.pow(2, this.anizonDefeats - 1);
+        console.log('[DEBUG] Granting rewards - EXP:', expReward, 'Coins:', coinReward);
         this.addExp(expReward);
         this.addCoins(coinReward);
     },

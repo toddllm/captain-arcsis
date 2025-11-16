@@ -523,7 +523,22 @@ class Boss {
     }
 
     update(deltaTime, player) {
-        if (!this.active || this.defeated) return;
+        if (!this.active) return;
+
+        // Process defeat dialogue even when defeated
+        if (this.defeated) {
+            if (this.dialogueQueue.length > 0) {
+                if (this.dialogueTimer <= 0) {
+                    this.currentDialogue = this.dialogueQueue.shift();
+                    this.dialogueTimer = 2500;
+                } else {
+                    this.dialogueTimer -= deltaTime;
+                }
+            } else {
+                this.currentDialogue = '';
+            }
+            return;
+        }
 
         this.frame++;
 

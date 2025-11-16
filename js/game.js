@@ -39,6 +39,11 @@ const Game = {
     // Inventory display
     showInventory: false,
 
+    // Notification system for visual feedback
+    notification: '',
+    notificationTimer: 0,
+    notificationColor: '#00FF00',
+
     init: function() {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
@@ -80,6 +85,9 @@ const Game = {
 
         // Update low health warning effect
         LowHealthWarning.update(deltaTime);
+
+        // Update notification timer
+        this.updateNotification(deltaTime);
 
         switch (this.state) {
             case 'menu':
@@ -131,7 +139,17 @@ const Game = {
                     if (Player.maxHearts < CONSTANTS.MAX_HEARTS) {
                         Player.maxHearts++;
                         Player.permanentDeaths++;
+                        console.log('[DEBUG] Death progression! maxHearts:', Player.maxHearts, 'permanentDeaths:', Player.permanentDeaths);
                         Fairy.speak(`Death makes you stronger! Max hearts: ${Player.maxHearts}/7`);
+
+                        // CRITICAL: Save death progression immediately so it persists
+                        SaveSystem.save({
+                            currentLevel: this.currentLevel,
+                            currentArea: World.currentArea,
+                            defeatedBosses: this.defeatedBosses,
+                            playTime: this.playTime
+                        });
+                        console.log('[DEBUG] Death progression saved to localStorage');
                     }
                     this.state = 'menu';
                 }
@@ -345,6 +363,7 @@ const Game = {
                 // CRITICAL FIX: Only handle defeat ONCE using a guard flag
                 if (!this.anizonDefeatHandled) {
                     this.anizonDefeatHandled = true; // Prevent spam!
+                    console.log('[DEBUG] Anizon defeated! Calling onAnizonDefeat once.');
                     Player.onAnizonDefeat();
 
                     // Anizon appears in EVERY level - transition to next with new Anizon
@@ -430,6 +449,48 @@ const Game = {
         }
     },
 
+    showNotification: function(message, color = '#FFFFFF') {
+        this.notification = message;
+        this.notificationTimer = 3000; // Show for 3 seconds
+        this.notificationColor = color;
+        Audio.saveGame(); // Play feedback sound
+    },
+
+    updateNotification: function(deltaTime) {
+        if (this.notificationTimer > 0) {
+            this.notificationTimer -= deltaTime;
+            if (this.notificationTimer <= 0) {
+                this.notification = '';
+            }
+        }
+    },
+
+    renderNotification: function() {
+        if (!this.notification) return;
+
+        const ctx = this.ctx;
+        ctx.save();
+
+        // Calculate fade based on timer
+        const alpha = Math.min(1, this.notificationTimer / 500);
+
+        // Draw notification box
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(CONSTANTS.CANVAS_WIDTH / 2 - 150, 50, 300, 50);
+        ctx.strokeStyle = this.notificationColor;
+        ctx.lineWidth = 3;
+        ctx.strokeRect(CONSTANTS.CANVAS_WIDTH / 2 - 150, 50, 300, 50);
+
+        // Draw text
+        ctx.fillStyle = this.notificationColor;
+        ctx.font = 'bold 24px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(this.notification, CONSTANTS.CANVAS_WIDTH / 2, 82);
+
+        ctx.restore();
+    },
+
     updatePaused: function() {
         // Update music toggle label to reflect current state
         this.pauseOptions[4] = Audio.isMusicEnabled() ? 'Music: On' : 'Music: Off';
@@ -472,13 +533,22 @@ const Game = {
                 break;
 
             case 3: // Save Game
-                SaveSystem.save({
+                console.log('[DEBUG] Save Game selected');
+                const saveResult = SaveSystem.save({
                     currentLevel: this.currentLevel,
                     currentArea: World.currentArea,
                     defeatedBosses: this.defeatedBosses,
                     playTime: this.playTime
                 });
-                Fairy.speak("Game saved!");
+                console.log('[DEBUG] Save result:', saveResult);
+                if (saveResult) {
+                    this.showNotification('GAME SAVED!', '#00FF00');
+                    if (Fairy.active) {
+                        Fairy.speak("Game saved!");
+                    }
+                } else {
+                    this.showNotification('SAVE FAILED!', '#FF0000');
+                }
                 break;
 
             case 4: // Music Toggle
@@ -698,6 +768,9 @@ const Game = {
 
         // Restore context after screen shake
         this.ctx.restore();
+
+        // Render notification on top of everything (not affected by screen shake)
+        this.renderNotification();
     },
 
     renderMenu: function() {
@@ -1289,21 +1362,39 @@ const Game = {
         ctx.fillStyle = '#FF0000';
         ctx.font = '48px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('GAME OVER', CONSTANTS.CANVAS_WIDTH / 2, 200);
+        ctx.fillText('GAME OVER', CONSTANTS.CANVAS_WIDTH / 2, 180);
 
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '20px monospace';
-        ctx.fillText(`Arcsis Type: ${Player.arcsisType}`, CONSTANTS.CANVAS_WIDTH / 2, 270);
-        ctx.fillText(`Level: ${Player.level}`, CONSTANTS.CANVAS_WIDTH / 2, 300);
-        ctx.fillText(`Coins: ${Utils.formatNumber(Player.coins)}`, CONSTANTS.CANVAS_WIDTH / 2, 330);
-        ctx.fillText(`Anizon Defeats: ${Player.anizonDefeats}`, CONSTANTS.CANVAS_WIDTH / 2, 360);
-        ctx.fillText(`Time: ${Utils.formatTime(this.playTime / 1000)}`, CONSTANTS.CANVAS_WIDTH / 2, 390);
+        ctx.fillText(`Arcsis Type: ${Player.arcsisType}`, CONSTANTS.CANVAS_WIDTH / 2, 250);
+        ctx.fillText(`Level: ${Player.level}`, CONSTANTS.CANVAS_WIDTH / 2, 280);
+        ctx.fillText(`Coins: ${Utils.formatNumber(Player.coins)}`, CONSTANTS.CANVAS_WIDTH / 2, 310);
+        ctx.fillText(`Anizon Defeats: ${Player.anizonDefeats}`, CONSTANTS.CANVAS_WIDTH / 2, 340);
+        ctx.fillText(`Time: ${Utils.formatTime(this.playTime / 1000)}`, CONSTANTS.CANVAS_WIDTH / 2, 370);
+
+        // Show death progression bonus
+        if (Player.maxHearts < CONSTANTS.MAX_HEARTS) {
+            ctx.fillStyle = '#00FF00';
+            ctx.font = '24px monospace';
+            const pulseScale = 1 + Math.sin(Date.now() * 0.005) * 0.1;
+            ctx.save();
+            ctx.translate(CONSTANTS.CANVAS_WIDTH / 2, 420);
+            ctx.scale(pulseScale, pulseScale);
+            ctx.fillText('DEATH BONUS: +1 MAX HEART!', 0, 0);
+            ctx.restore();
+            ctx.font = '16px monospace';
+            ctx.fillText(`(${Player.maxHearts} -> ${Player.maxHearts + 1} / ${CONSTANTS.MAX_HEARTS})`, CONSTANTS.CANVAS_WIDTH / 2, 450);
+        } else {
+            ctx.fillStyle = '#888888';
+            ctx.font = '16px monospace';
+            ctx.fillText(`Max Hearts: ${Player.maxHearts}/${CONSTANTS.MAX_HEARTS} (MAXED!)`, CONSTANTS.CANVAS_WIDTH / 2, 420);
+        }
 
         ctx.fillStyle = '#FFFF00';
         ctx.font = '16px monospace';
         const blink = Math.floor(Date.now() / 500) % 2;
         if (blink) {
-            ctx.fillText('Press SPACE to return to menu', CONSTANTS.CANVAS_WIDTH / 2, 480);
+            ctx.fillText('Press SPACE to claim bonus & return to menu', CONSTANTS.CANVAS_WIDTH / 2, 500);
         }
     },
 
