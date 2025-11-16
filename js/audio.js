@@ -6,9 +6,26 @@ const Audio = {
     masterVolume: 0.5,
     musicPlaying: false,
     currentMusic: null,
+    currentMusicSource: null,
+    musicBuffers: {},
+    loadedMusic: {},
 
     init: function() {
         this.context = new (window.AudioContext || window.webkitAudioContext)();
+        // Preload WAV music files
+        this.loadMusicFile('forest_theme', 'forest_theme.wav');
+        this.loadMusicFile('dungeon_theme', 'dungeon_theme.wav');
+    },
+
+    loadMusicFile: function(name, url) {
+        fetch(url)
+            .then(response => response.arrayBuffer())
+            .then(arrayBuffer => this.context.decodeAudioData(arrayBuffer))
+            .then(audioBuffer => {
+                this.musicBuffers[name] = audioBuffer;
+                console.log(`Loaded music: ${name}`);
+            })
+            .catch(err => console.log(`Could not load ${name}:`, err));
     },
 
     resume: function() {
@@ -176,11 +193,89 @@ const Audio = {
         });
     },
 
+    // Arcsis Spin Attack Sound
+    spinAttack: function() {
+        // Whooshing spin sound
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => this.playTone(300 + i * 100, 0.15, 'sawtooth', 0.4), i * 50);
+        }
+        // Impact sound
+        setTimeout(() => {
+            this.playTone(100, 0.3, 'square', 0.6);
+            this.playTone(80, 0.4, 'sawtooth', 0.5);
+        }, 400);
+    },
+
+    // Heart lost sound
+    heartLost: function() {
+        this.playTone(200, 0.2, 'square', 0.6);
+        setTimeout(() => this.playTone(150, 0.3, 'square', 0.5), 150);
+        setTimeout(() => this.playTone(100, 0.4, 'square', 0.4), 300);
+    },
+
+    // Special ability charge
+    specialCharge: function() {
+        const notes = [523, 659, 784, 1047, 1319]; // C5 to E6
+        notes.forEach((note, i) => {
+            setTimeout(() => this.playTone(note, 0.15, 'sine', 0.5), i * 100);
+        });
+    },
+
+    // Dash sound
+    dash: function() {
+        this.playTone(500, 0.1, 'sawtooth', 0.3);
+        setTimeout(() => this.playTone(700, 0.08, 'sawtooth', 0.2), 50);
+    },
+
+    // Combo hit sound
+    comboHit: function(comboCount) {
+        const pitch = 400 + comboCount * 50;
+        this.playTone(pitch, 0.08, 'square', 0.4);
+    },
+
+    // Power-up collected
+    powerUpCollect: function() {
+        const notes = [880, 1047, 1319, 1568];
+        notes.forEach((note, i) => {
+            setTimeout(() => this.playTone(note, 0.2, 'triangle', 0.4), i * 80);
+        });
+    },
+
+    // Play actual WAV music file
+    playMusicFile: function(name) {
+        if (!this.musicBuffers[name]) return false;
+
+        // Stop any current music source
+        if (this.currentMusicSource) {
+            this.currentMusicSource.stop();
+            this.currentMusicSource = null;
+        }
+
+        const source = this.context.createBufferSource();
+        const gainNode = this.context.createGain();
+
+        source.buffer = this.musicBuffers[name];
+        source.loop = true;
+        source.connect(gainNode);
+        gainNode.connect(this.context.destination);
+        gainNode.gain.value = this.masterVolume * 0.6;
+
+        source.start();
+        this.currentMusicSource = source;
+        this.loadedMusic[name] = { source, gainNode };
+
+        return true;
+    },
+
     // Background music (simple loop)
     startForestMusic: function() {
         if (this.musicPlaying) return;
         this.musicPlaying = true;
-        this.playForestLoop();
+
+        // Try to play WAV file first, fallback to generated
+        if (!this.playMusicFile('forest_theme')) {
+            this.playForestLoop();
+        }
     },
 
     playForestLoop: function() {
@@ -201,7 +296,11 @@ const Audio = {
     startDungeonMusic: function() {
         if (this.musicPlaying) return;
         this.musicPlaying = true;
-        this.playDungeonLoop();
+
+        // Try to play WAV file first, fallback to generated
+        if (!this.playMusicFile('dungeon_theme')) {
+            this.playDungeonLoop();
+        }
     },
 
     playDungeonLoop: function() {
@@ -251,11 +350,86 @@ const Audio = {
         this.currentMusic = setTimeout(() => this.playBossLoop(), 2000);
     },
 
+    // Start crystal caverns music
+    startCrystalMusic: function() {
+        if (this.musicPlaying) return;
+        this.musicPlaying = true;
+        this.playCrystalLoop();
+    },
+
+    playCrystalLoop: function() {
+        if (!this.musicPlaying) return;
+
+        // Crystalline, ethereal melody
+        const melody = [659, 784, 880, 988, 880, 784, 659, 587]; // E5 range - sparkly
+        melody.forEach((note, i) => {
+            setTimeout(() => {
+                if (this.musicPlaying) {
+                    this.playTone(note, 0.3, 'sine', 0.2);
+                    this.playTone(note * 1.5, 0.2, 'triangle', 0.1); // Shimmer
+                }
+            }, i * 400);
+        });
+
+        this.currentMusic = setTimeout(() => this.playCrystalLoop(), 3200);
+    },
+
+    // Start shadow realm music
+    startShadowMusic: function() {
+        if (this.musicPlaying) return;
+        this.musicPlaying = true;
+        this.playShadowLoop();
+    },
+
+    playShadowLoop: function() {
+        if (!this.musicPlaying) return;
+
+        // Dark, ominous melody
+        const melody = [98, 110, 98, 87, 98, 110, 131, 110]; // Very low - dark
+        melody.forEach((note, i) => {
+            setTimeout(() => {
+                if (this.musicPlaying) {
+                    this.playTone(note, 0.6, 'sawtooth', 0.15);
+                }
+            }, i * 700);
+        });
+
+        this.currentMusic = setTimeout(() => this.playShadowLoop(), 5600);
+    },
+
+    // Start sky citadel music
+    startSkyMusic: function() {
+        if (this.musicPlaying) return;
+        this.musicPlaying = true;
+        this.playSkyLoop();
+    },
+
+    playSkyLoop: function() {
+        if (!this.musicPlaying) return;
+
+        // Airy, majestic melody
+        const melody = [523, 659, 784, 1047, 784, 659, 523, 440]; // C5 range - uplifting
+        melody.forEach((note, i) => {
+            setTimeout(() => {
+                if (this.musicPlaying) {
+                    this.playTone(note, 0.35, 'triangle', 0.2);
+                }
+            }, i * 450);
+        });
+
+        this.currentMusic = setTimeout(() => this.playSkyLoop(), 3600);
+    },
+
     stopMusic: function() {
         this.musicPlaying = false;
         if (this.currentMusic) {
             clearTimeout(this.currentMusic);
             this.currentMusic = null;
+        }
+        // Stop WAV music if playing
+        if (this.currentMusicSource) {
+            this.currentMusicSource.stop();
+            this.currentMusicSource = null;
         }
     }
 };

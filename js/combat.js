@@ -16,8 +16,14 @@ const Combat = {
         });
     },
 
-    addEffect: function(effect) {
-        this.effects.push(effect);
+    addEffect: function(x, y, type) {
+        this.effects.push({
+            x: x,
+            y: y,
+            type: type,
+            frame: 0,
+            maxFrames: type === 'arcsis_nova' ? 60 : type === 'spin_impact' ? 45 : 30
+        });
     },
 
     update: function(deltaTime) {
@@ -109,6 +115,18 @@ const Combat = {
 
             case 'fold':
                 this.drawFoldEffect(ctx, effect);
+                break;
+
+            case 'spin_crash':
+                this.drawSpinCrashEffect(ctx, effect);
+                break;
+
+            case 'spin_impact':
+                this.drawSpinImpactEffect(ctx, effect);
+                break;
+
+            case 'arcsis_nova':
+                this.drawArcsisNovaEffect(ctx, effect);
                 break;
 
             case 'meteor':
@@ -421,6 +439,39 @@ const Combat = {
         ctx.fill();
     },
 
+    // ARCSIS SPIN ATTACK EFFECTS
+    drawSpinCrashEffect: function(ctx, effect) {
+        ctx.globalAlpha = 1 - (effect.frame / effect.maxFrames);
+
+        // Explosion of impact
+        const size = effect.frame * 4;
+
+        // Orange/red explosion
+        ctx.fillStyle = '#FF6600';
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Shockwave rings
+        ctx.strokeStyle = '#FFAA00';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, size * 1.5, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Impact stars
+        ctx.fillStyle = '#FFFFFF';
+        for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2 + effect.frame * 0.2;
+            const dist = size * 0.8;
+            ctx.fillRect(
+                effect.x + Math.cos(angle) * dist - 3,
+                effect.y + Math.sin(angle) * dist - 3,
+                6, 6
+            );
+        }
+    },
+
     drawMeteorEffect: function(ctx, effect) {
         ctx.globalAlpha = 1 - (effect.frame / effect.maxFrames);
         const size = 30 + effect.frame * 2;
@@ -441,6 +492,106 @@ const Combat = {
                 effect.y + Math.sin(angle) * dist - 3,
                 6, 6
             );
+        }
+    },
+
+    drawSpinImpactEffect: function(ctx, effect) {
+        ctx.globalAlpha = 1 - (effect.frame / effect.maxFrames);
+
+        // Massive shockwave
+        const size = effect.frame * 8;
+
+        // Multiple rings expanding
+        for (let i = 0; i < 3; i++) {
+            const ringSize = size - i * 20;
+            if (ringSize > 0) {
+                ctx.strokeStyle = i === 0 ? '#FF0000' : i === 1 ? '#FF6600' : '#FFAA00';
+                ctx.lineWidth = 6 - i * 2;
+                ctx.beginPath();
+                ctx.arc(effect.x, effect.y, ringSize, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+
+        // Center flash
+        if (effect.frame < 10) {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, 30 - effect.frame * 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Debris particles
+        ctx.fillStyle = '#FF8800';
+        for (let i = 0; i < 12; i++) {
+            const angle = (i / 12) * Math.PI * 2;
+            const dist = effect.frame * 6;
+            ctx.fillRect(
+                effect.x + Math.cos(angle) * dist - 4,
+                effect.y + Math.sin(angle) * dist - 4,
+                8, 8
+            );
+        }
+    },
+
+    drawArcsisNovaEffect: function(ctx, effect) {
+        ctx.globalAlpha = 1 - (effect.frame / effect.maxFrames);
+
+        // MASSIVE golden explosion
+        const size = effect.frame * 6;
+
+        // Outer ring
+        const gradient = ctx.createRadialGradient(
+            effect.x, effect.y, 0,
+            effect.x, effect.y, size
+        );
+        gradient.addColorStop(0, 'rgba(255, 215, 0, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(255, 165, 0, 0.5)');
+        gradient.addColorStop(1, 'rgba(255, 69, 0, 0)');
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(effect.x, effect.y, size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Energy beams
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 4;
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2 + effect.frame * 0.15;
+            ctx.beginPath();
+            ctx.moveTo(effect.x, effect.y);
+            ctx.lineTo(
+                effect.x + Math.cos(angle) * size * 1.2,
+                effect.y + Math.sin(angle) * size * 1.2
+            );
+            ctx.stroke();
+        }
+
+        // Center star
+        if (effect.frame < 30) {
+            ctx.fillStyle = '#FFFFFF';
+            const starSize = 20 + Math.sin(effect.frame * 0.5) * 10;
+            // Draw star shape
+            ctx.beginPath();
+            for (let i = 0; i < 10; i++) {
+                const angle = (i / 10) * Math.PI * 2 - Math.PI / 2;
+                const radius = i % 2 === 0 ? starSize : starSize * 0.5;
+                const x = effect.x + Math.cos(angle) * radius;
+                const y = effect.y + Math.sin(angle) * radius;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // "ARCSIS NOVA" text
+        if (effect.frame < 40) {
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 24px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('ARCSIS NOVA!', effect.x, effect.y - size - 20);
         }
     },
 

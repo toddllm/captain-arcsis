@@ -112,6 +112,150 @@ class Enemy {
                 this.height = 56;
                 break;
 
+            // CRYSTAL CAVERNS ENEMIES
+            case 'crystal_spider':
+                // Fast and deadly!
+                this.maxHp = 90;
+                this.hp = 90;
+                this.attack = 22;
+                this.defense = 12;
+                this.speed = 3;
+                this.expValue = 65;
+                this.coinDrop = 18;
+                this.aggroRange = 200;
+                this.attackRange = 35;
+                this.attackCooldownMax = 1000;
+                this.width = 36;
+                this.height = 28;
+                break;
+
+            case 'crystal_elemental':
+                // High defense, reflects damage!
+                this.maxHp = 180;
+                this.hp = 180;
+                this.attack = 28;
+                this.defense = 30;
+                this.speed = 1.2;
+                this.expValue = 100;
+                this.coinDrop = 35;
+                this.aggroRange = 160;
+                this.attackRange = 50;
+                this.attackCooldownMax = 2200;
+                this.reflectChance = 0.2;
+                break;
+
+            case 'gem_golem':
+                // Even tougher than armored golem!
+                this.maxHp = 300;
+                this.hp = 300;
+                this.attack = 45;
+                this.defense = 35;
+                this.speed = 0.6;
+                this.expValue = 150;
+                this.coinDrop = 60;
+                this.aggroRange = 120;
+                this.attackRange = 60;
+                this.attackCooldownMax = 3500;
+                this.width = 52;
+                this.height = 60;
+                break;
+
+            // SHADOW REALM ENEMIES
+            case 'shadow_assassin':
+                // Can teleport behind you!
+                this.maxHp = 110;
+                this.hp = 110;
+                this.attack = 40;
+                this.defense = 8;
+                this.speed = 4;
+                this.expValue = 90;
+                this.coinDrop = 30;
+                this.aggroRange = 250;
+                this.attackRange = 40;
+                this.attackCooldownMax = 1600;
+                this.canTeleport = true;
+                this.teleportCooldown = 0;
+                break;
+
+            case 'void_wraith':
+                // Drains life!
+                this.maxHp = 140;
+                this.hp = 140;
+                this.attack = 35;
+                this.defense = 12;
+                this.speed = 2.2;
+                this.expValue = 95;
+                this.coinDrop = 28;
+                this.aggroRange = 180;
+                this.attackRange = 45;
+                this.attackCooldownMax = 1400;
+                this.lifeDrain = 0.3; // Heals 30% of damage dealt
+                break;
+
+            case 'nightmare_beast':
+                // Huge and terrifying!
+                this.maxHp = 350;
+                this.hp = 350;
+                this.attack = 55;
+                this.defense = 20;
+                this.speed = 1.5;
+                this.expValue = 180;
+                this.coinDrop = 70;
+                this.aggroRange = 200;
+                this.attackRange = 70;
+                this.attackCooldownMax = 2800;
+                this.width = 56;
+                this.height = 64;
+                break;
+
+            // SKY CITADEL ENEMIES
+            case 'wind_elemental':
+                // Super fast, pushes player back!
+                this.maxHp = 100;
+                this.hp = 100;
+                this.attack = 25;
+                this.defense = 10;
+                this.speed = 4.5;
+                this.expValue = 85;
+                this.coinDrop = 25;
+                this.aggroRange = 220;
+                this.attackRange = 50;
+                this.attackCooldownMax = 900;
+                this.pushBack = true;
+                break;
+
+            case 'thunder_knight':
+                // Lightning attacks!
+                this.maxHp = 200;
+                this.hp = 200;
+                this.attack = 50;
+                this.defense = 22;
+                this.speed = 1.8;
+                this.expValue = 130;
+                this.coinDrop = 45;
+                this.aggroRange = 180;
+                this.attackRange = 55;
+                this.attackCooldownMax = 2000;
+                this.chainLightning = true;
+                break;
+
+            case 'sky_dragon':
+                // Mini boss level enemy!
+                this.maxHp = 500;
+                this.hp = 500;
+                this.attack = 70;
+                this.defense = 40;
+                this.speed = 2.5;
+                this.expValue = 250;
+                this.coinDrop = 100;
+                this.aggroRange = 300;
+                this.attackRange = 80;
+                this.attackCooldownMax = 2500;
+                this.width = 64;
+                this.height = 72;
+                this.fireBreath = true;
+                break;
+
             default:
                 // Default tough enemy
                 this.maxHp = 100;
@@ -262,9 +406,372 @@ class Enemy {
                 this.drawArmoredGolem(ctx);
                 break;
 
+            case 'crystal_spider':
+                this.drawCrystalSpider(ctx);
+                break;
+
+            case 'crystal_elemental':
+                this.drawCrystalElemental(ctx);
+                break;
+
+            case 'gem_golem':
+                this.drawGemGolem(ctx);
+                break;
+
+            case 'shadow_assassin':
+                this.drawShadowAssassin(ctx);
+                break;
+
+            case 'void_wraith':
+                this.drawVoidWraith(ctx);
+                break;
+
+            case 'nightmare_beast':
+                this.drawNightmareBeast(ctx);
+                break;
+
+            case 'wind_elemental':
+                this.drawWindElemental(ctx);
+                break;
+
+            case 'thunder_knight':
+                this.drawThunderKnight(ctx);
+                break;
+
+            case 'sky_dragon':
+                this.drawSkyDragon(ctx);
+                break;
+
             default:
                 this.drawDefaultEnemy(ctx);
         }
+    }
+
+    // NEW ENEMY DRAWING FUNCTIONS
+    drawCrystalSpider(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Body
+        ctx.fillStyle = '#88CCFF';
+        ctx.fillRect(8, 8, 20, 12);
+
+        // Crystal legs
+        ctx.fillStyle = '#44AAFF';
+        ctx.fillRect(2, 4, 4, 20);
+        ctx.fillRect(30, 4, 4, 20);
+        ctx.fillRect(6, 2, 4, 24);
+        ctx.fillRect(26, 2, 4, 24);
+
+        // Eyes
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(12, 10, 4, 4);
+        ctx.fillRect(20, 10, 4, 4);
+
+        // Health bar
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, -8, 36 * (this.hp / this.maxHp), 4);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(0, -8, 36, 4);
+
+        ctx.restore();
+    }
+
+    drawCrystalElemental(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Crystalline body
+        ctx.fillStyle = '#66FFFF';
+        ctx.beginPath();
+        ctx.moveTo(16, 0);
+        ctx.lineTo(32, 16);
+        ctx.lineTo(24, 40);
+        ctx.lineTo(8, 40);
+        ctx.lineTo(0, 16);
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner glow
+        ctx.fillStyle = '#AAFFFF';
+        ctx.fillRect(10, 12, 12, 16);
+
+        // Eyes
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(12, 14, 3, 3);
+        ctx.fillRect(17, 14, 3, 3);
+
+        // Health bar
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, -8, 32 * (this.hp / this.maxHp), 4);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(0, -8, 32, 4);
+
+        ctx.restore();
+    }
+
+    drawGemGolem(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Massive body
+        ctx.fillStyle = '#FF44FF';
+        ctx.fillRect(8, 4, 36, 44);
+
+        // Gem core
+        ctx.fillStyle = '#FF88FF';
+        ctx.fillRect(18, 18, 16, 16);
+
+        // Arms
+        ctx.fillStyle = '#CC00CC';
+        ctx.fillRect(0, 12, 10, 28);
+        ctx.fillRect(42, 12, 10, 28);
+
+        // Eyes
+        ctx.fillStyle = '#FFFF00';
+        ctx.fillRect(16, 10, 6, 6);
+        ctx.fillRect(30, 10, 6, 6);
+
+        // Legs
+        ctx.fillRect(12, 48, 12, 12);
+        ctx.fillRect(28, 48, 12, 12);
+
+        // Health bar
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, -12, 52 * (this.hp / this.maxHp), 6);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(0, -12, 52, 6);
+
+        ctx.restore();
+    }
+
+    drawShadowAssassin(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Shadowy body with transparency
+        ctx.globalAlpha = 0.8;
+
+        // Cloak
+        ctx.fillStyle = '#1A1A1A';
+        ctx.fillRect(6, 4, 20, 32);
+
+        // Hood
+        ctx.fillStyle = '#0A0A0A';
+        ctx.fillRect(4, 0, 24, 12);
+
+        // Glowing eyes
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(10, 4, 3, 3);
+        ctx.fillRect(19, 4, 3, 3);
+
+        // Daggers
+        ctx.fillStyle = '#888888';
+        ctx.fillRect(0, 20, 2, 14);
+        ctx.fillRect(30, 20, 2, 14);
+
+        ctx.globalAlpha = 1;
+
+        // Health bar
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, -8, 32 * (this.hp / this.maxHp), 4);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(0, -8, 32, 4);
+
+        ctx.restore();
+    }
+
+    drawVoidWraith(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Void essence
+        ctx.globalAlpha = 0.6 + Math.sin(this.frame * 0.1) * 0.2;
+
+        // Body
+        ctx.fillStyle = '#330066';
+        ctx.fillRect(4, 0, 24, 36);
+
+        // Void core
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(10, 12, 12, 12);
+
+        // Wispy trails
+        ctx.fillStyle = '#660099';
+        ctx.fillRect(2, 28, 8, 12);
+        ctx.fillRect(22, 28, 8, 12);
+
+        // Eyes
+        ctx.fillStyle = '#9900FF';
+        ctx.fillRect(8, 6, 6, 6);
+        ctx.fillRect(18, 6, 6, 6);
+
+        ctx.globalAlpha = 1;
+
+        // Health bar
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, -8, 32 * (this.hp / this.maxHp), 4);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(0, -8, 32, 4);
+
+        ctx.restore();
+    }
+
+    drawNightmareBeast(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Massive dark body
+        ctx.fillStyle = '#220022';
+        ctx.fillRect(8, 8, 40, 48);
+
+        // Spikes
+        ctx.fillStyle = '#440044';
+        ctx.fillRect(12, 0, 8, 12);
+        ctx.fillRect(28, 0, 8, 12);
+        ctx.fillRect(36, 4, 12, 8);
+
+        // Claws
+        ctx.fillStyle = '#660066';
+        ctx.fillRect(0, 24, 10, 24);
+        ctx.fillRect(46, 24, 10, 24);
+
+        // Multiple eyes
+        ctx.fillStyle = '#FF00FF';
+        ctx.fillRect(16, 16, 4, 4);
+        ctx.fillRect(24, 12, 4, 4);
+        ctx.fillRect(32, 16, 4, 4);
+        ctx.fillRect(20, 24, 4, 4);
+        ctx.fillRect(28, 24, 4, 4);
+
+        // Fangs
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(20, 36, 4, 8);
+        ctx.fillRect(32, 36, 4, 8);
+
+        // Health bar
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, -12, 56 * (this.hp / this.maxHp), 6);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(0, -12, 56, 6);
+
+        ctx.restore();
+    }
+
+    drawWindElemental(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Swirling wind form
+        ctx.globalAlpha = 0.7;
+
+        const wobble = Math.sin(this.frame * 0.2) * 3;
+
+        ctx.fillStyle = '#AAFFFF';
+        ctx.beginPath();
+        ctx.arc(16 + wobble, 20, 16, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wind trails
+        ctx.strokeStyle = '#88FFFF';
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 4; i++) {
+            const angle = (i / 4) * Math.PI * 2 + this.frame * 0.1;
+            ctx.beginPath();
+            ctx.moveTo(16 + wobble, 20);
+            ctx.lineTo(16 + wobble + Math.cos(angle) * 20, 20 + Math.sin(angle) * 20);
+            ctx.stroke();
+        }
+
+        // Eyes
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(10 + wobble, 16, 4, 4);
+        ctx.fillRect(18 + wobble, 16, 4, 4);
+
+        // Health bar
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, -8, 32 * (this.hp / this.maxHp), 4);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(0, -8, 32, 4);
+
+        ctx.restore();
+    }
+
+    drawThunderKnight(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Armored body
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(6, 4, 20, 32);
+
+        // Helmet
+        ctx.fillStyle = '#FFA500';
+        ctx.fillRect(4, 0, 24, 12);
+
+        // Lightning bolt emblem
+        ctx.fillStyle = '#FFFF00';
+        ctx.fillRect(14, 16, 4, 12);
+
+        // Electric sword
+        ctx.fillStyle = '#FFFF00';
+        ctx.fillRect(28, 8, 4, 24);
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.strokeRect(28, 8, 4, 24);
+
+        // Eyes
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(10, 4, 3, 3);
+        ctx.fillRect(19, 4, 3, 3);
+
+        // Health bar
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, -8, 32 * (this.hp / this.maxHp), 4);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(0, -8, 32, 4);
+
+        ctx.restore();
+    }
+
+    drawSkyDragon(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Dragon body
+        ctx.fillStyle = '#4488FF';
+        ctx.fillRect(12, 16, 40, 40);
+
+        // Head
+        ctx.fillStyle = '#3366CC';
+        ctx.fillRect(8, 4, 28, 20);
+
+        // Wings
+        ctx.fillStyle = '#66AAFF';
+        ctx.fillRect(0, 20, 14, 28);
+        ctx.fillRect(50, 20, 14, 28);
+
+        // Tail
+        ctx.fillStyle = '#3366CC';
+        ctx.fillRect(44, 44, 20, 12);
+
+        // Eyes
+        ctx.fillStyle = '#FF4400';
+        ctx.fillRect(14, 10, 6, 6);
+        ctx.fillRect(26, 10, 6, 6);
+
+        // Fangs
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(16, 20, 4, 6);
+        ctx.fillRect(26, 20, 4, 6);
+
+        // Health bar
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(0, -12, 64 * (this.hp / this.maxHp), 6);
+        ctx.strokeStyle = '#FFF';
+        ctx.strokeRect(0, -12, 64, 6);
+
+        ctx.restore();
     }
 
     drawDarkSlime(ctx) {
@@ -459,6 +966,101 @@ const Enemies = {
 
     checkCollisions: function(player) {
         const playerHitbox = player.getHitbox();
+        const playerCenterX = player.x + player.width / 2;
+        const playerCenterY = player.y + player.height / 2;
+
+        // Handle ARCSIS SPIN ATTACK
+        if (player.spinning) {
+            const spinHitbox = player.getSpinAttackHitbox();
+
+            for (let enemy of this.list) {
+                if (!enemy.alive) continue;
+
+                const enemyCenterX = enemy.x + enemy.width / 2;
+                const enemyCenterY = enemy.y + enemy.height / 2;
+                const dist = Utils.distance(playerCenterX, playerCenterY, enemyCenterX, enemyCenterY);
+
+                // Pull enemies toward player (vortex effect)
+                if (dist <= player.spinRadius && dist > 30) {
+                    const pullStrength = 0.15;
+                    const angle = Utils.angle(enemyCenterX, enemyCenterY, playerCenterX, playerCenterY);
+                    enemy.x += Math.cos(angle) * pullStrength * (player.spinRadius - dist);
+                    enemy.y += Math.sin(angle) * pullStrength * (player.spinRadius - dist);
+
+                    // Track caught enemies
+                    if (!player.caughtEnemies.includes(enemy)) {
+                        player.caughtEnemies.push(enemy);
+                    }
+                }
+            }
+        }
+
+        // When spin attack FINISHES - launch and crash enemies together!
+        if (!player.spinning && player.caughtEnemies.length > 0) {
+            const caughtCount = player.caughtEnemies.length;
+
+            // Calculate ULTRA DAMAGE based on number of enemies caught
+            const baseDamage = player.calculateDamage() * player.spinDamageMultiplier;
+            const collisionBonus = caughtCount * 50; // Bonus damage for each enemy crashed together
+
+            // Apply damage to all caught enemies
+            for (let enemy of player.caughtEnemies) {
+                if (!enemy.alive) continue;
+
+                // Launch effect (visual only, enemies stay in place)
+                enemy.y -= 20; // Brief launch
+
+                // ULTRA DAMAGE from spin + collision
+                const totalDamage = baseDamage + collisionBonus;
+                const actualDamage = enemy.takeDamage(totalDamage);
+
+                if (actualDamage > 0) {
+                    Combat.addDamageNumber(enemy.x + enemy.width / 2, enemy.y - 30, actualDamage);
+                    Combat.addEffect(enemy.x + enemy.width / 2, enemy.y, 'spin_crash');
+
+                    if (!enemy.alive) {
+                        player.addExp(enemy.expValue * 2); // Bonus EXP for spin kill
+                        player.addCoins(enemy.coinDrop * 2); // Bonus coins!
+                        player.addCombo();
+                    }
+                }
+            }
+
+            // Clear caught enemies
+            player.caughtEnemies = [];
+
+            // Create massive impact effect
+            Combat.addEffect(playerCenterX, playerCenterY, 'spin_impact');
+        }
+
+        // Handle special ability (Arcsis Nova)
+        if (player.specialAbilityCooldown > 14900) { // Just activated
+            const novaRadius = 200;
+
+            for (let enemy of this.list) {
+                if (!enemy.alive) continue;
+
+                const enemyCenterX = enemy.x + enemy.width / 2;
+                const enemyCenterY = enemy.y + enemy.height / 2;
+                const dist = Utils.distance(playerCenterX, playerCenterY, enemyCenterX, enemyCenterY);
+
+                if (dist <= novaRadius) {
+                    // Massive nova damage
+                    const novaDamage = player.calculateDamage() * 10;
+                    const actualDamage = enemy.takeDamage(novaDamage);
+
+                    if (actualDamage > 0) {
+                        Combat.addDamageNumber(enemy.x + enemy.width / 2, enemy.y, actualDamage);
+
+                        if (!enemy.alive) {
+                            player.addExp(enemy.expValue * 3);
+                            player.addCoins(enemy.coinDrop * 3);
+                            player.addCombo();
+                        }
+                    }
+                }
+            }
+        }
 
         for (let enemy of this.list) {
             if (!enemy.alive) continue;
@@ -477,6 +1079,8 @@ const Enemies = {
                             actualDamage
                         );
 
+                        player.addCombo(); // Add to combo on hit
+
                         if (!enemy.alive) {
                             player.addExp(enemy.expValue);
                             player.addCoins(enemy.coinDrop);
@@ -485,16 +1089,19 @@ const Enemies = {
                 }
             }
 
-            // Check if enemy hits player
-            const enemyHitbox = enemy.getHitbox();
-            if (Utils.collides(playerHitbox, enemyHitbox)) {
-                if (enemy.state === 'attack' || Utils.distance(
-                    enemyHitbox.x, enemyHitbox.y,
-                    playerHitbox.x, playerHitbox.y
-                ) < 30) {
-                    const damage = player.takeDamage(enemy.attack);
-                    if (damage > 0) {
-                        Combat.addDamageNumber(player.x + player.width / 2, player.y, damage);
+            // Check if enemy hits player (not during spin or dash)
+            if (!player.spinning && !player.dashing) {
+                const enemyHitbox = enemy.getHitbox();
+                if (Utils.collides(playerHitbox, enemyHitbox)) {
+                    if (enemy.state === 'attack' || Utils.distance(
+                        enemyHitbox.x, enemyHitbox.y,
+                        playerHitbox.x, playerHitbox.y
+                    ) < 30) {
+                        const damage = player.takeDamage(enemy.attack);
+                        if (damage > 0) {
+                            Combat.addDamageNumber(player.x + player.width / 2, player.y, damage);
+                            player.comboCount = 0; // Reset combo on hit
+                        }
                     }
                 }
             }

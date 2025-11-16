@@ -127,6 +127,116 @@ class Boss {
                 ];
                 break;
 
+            case 'crystal_guardian':
+                // CRYSTAL GUARDIAN - Master of the Caverns
+                this.name = 'CRYSTAL GUARDIAN - Prism Lord';
+                this.x = 400;
+                this.y = 150;
+                this.width = 72;
+                this.height = 88;
+                this.maxHp = 4000;
+                this.hp = 4000;
+                this.attack = 80;
+                this.defense = 60; // Very high defense!
+                this.phase = 1;
+                this.maxPhases = 2;
+
+                this.reflectDamage = true;
+                this.crystalShards = [];
+
+                this.attacks = [
+                    'crystal_beam',
+                    'shard_storm',
+                    'prism_shield',
+                    'gem_explosion',
+                    'refract_light'
+                ];
+
+                this.introDialogue = [
+                    "You trespass in my crystalline domain...",
+                    "I am the CRYSTAL GUARDIAN!",
+                    "These caverns have been my home for MILLENNIA!",
+                    "Your attacks will REFLECT back upon you!",
+                    "BECOME ONE WITH THE CRYSTAL!"
+                ];
+                break;
+
+            case 'shadow_king':
+                // SHADOW KING - Ruler of the Void
+                this.name = 'SHADOW KING - Lord of Darkness';
+                this.x = 400;
+                this.y = 120;
+                this.width = 80;
+                this.height = 96;
+                this.maxHp = 6000;
+                this.hp = 6000;
+                this.attack = 120;
+                this.defense = 40;
+                this.phase = 1;
+                this.maxPhases = 3;
+
+                this.canTeleport = true;
+                this.lifeDrain = 0.2;
+                this.shadowClones = [];
+
+                this.attacks = [
+                    'shadow_strike',
+                    'void_eruption',
+                    'darkness_wave',
+                    'soul_drain',
+                    'nightmare_realm',
+                    'shadow_army'
+                ];
+
+                this.introDialogue = [
+                    "...",
+                    "You dare enter MY realm?",
+                    "I am the SHADOW KING!",
+                    "Darkness has no weakness!",
+                    "I will consume your very SOUL!",
+                    "JOIN THE ETERNAL DARKNESS!"
+                ];
+                break;
+
+            case 'eternal_emperor':
+                // ETERNAL EMPEROR - The TRUE Final Boss
+                this.name = 'ETERNAL EMPEROR - Master of All';
+                this.x = 400;
+                this.y = 100;
+                this.width = 96;
+                this.height = 112;
+                this.maxHp = 10000; // INSANE HP
+                this.hp = 10000;
+                this.attack = 150; // Devastating
+                this.defense = 80; // Nearly impenetrable
+                this.phase = 1;
+                this.maxPhases = 4;
+
+                this.canTeleport = true;
+                this.canSummon = true;
+                this.canReflect = true;
+                this.elementalShift = 0;
+
+                this.attacks = [
+                    'divine_judgment',
+                    'elemental_storm',
+                    'time_freeze',
+                    'reality_shatter',
+                    'emperor_wrath',
+                    'final_devastation'
+                ];
+
+                this.introDialogue = [
+                    "...",
+                    "You've come far, mortal...",
+                    "I am the ETERNAL EMPEROR!",
+                    "I have ruled this realm since time began!",
+                    "Your journey ends HERE!",
+                    "I control ALL ELEMENTS!",
+                    "WITNESS TRUE DIVINE POWER!"
+                ];
+                break;
+
             default:
                 this.name = 'Unknown Boss';
                 this.x = 400;
@@ -212,13 +322,49 @@ class Boss {
 
         // Phase transitions
         const hpPercent = this.hp / this.maxHp;
-        this.checkPhaseTransition(hpPercent);
+        if (this.type === 'anizon') {
+            if (hpPercent <= 0.3 && this.phase < 3) {
+                this.enterPhase(3);
+            } else if (hpPercent <= 0.6 && this.phase < 2) {
+                this.enterPhase(2);
+            }
+        } else if (this.type === 'origami_mirda') {
+            if (hpPercent <= 0.5 && this.phase < 2) {
+                this.enterPhase(2);
+            }
+        } else if (this.type === 'crystal_guardian') {
+            if (hpPercent <= 0.5 && this.phase < 2) {
+                this.enterPhase(2);
+            }
+        } else if (this.type === 'shadow_king') {
+            if (hpPercent <= 0.3 && this.phase < 3) {
+                this.enterPhase(3);
+            } else if (hpPercent <= 0.6 && this.phase < 2) {
+                this.enterPhase(2);
+            }
+        } else if (this.type === 'eternal_emperor') {
+            if (hpPercent <= 0.2 && this.phase < 4) {
+                this.enterPhase(4);
+            } else if (hpPercent <= 0.4 && this.phase < 3) {
+                this.enterPhase(3);
+            } else if (hpPercent <= 0.7 && this.phase < 2) {
+                this.enterPhase(2);
+            }
+        } else {
+            this.checkPhaseTransition(hpPercent);
+        }
 
         // Execute attacks based on type
         if (this.type === 'anizon') {
             this.updateAnizon(deltaTime, player);
         } else if (this.type === 'origami_mirda') {
             this.updateOrigamiMirda(deltaTime, player);
+        } else if (this.type === 'crystal_guardian') {
+            this.updateCrystalGuardian(deltaTime, player);
+        } else if (this.type === 'shadow_king') {
+            this.updateShadowKing(deltaTime, player);
+        } else if (this.type === 'eternal_emperor') {
+            this.updateEternalEmperor(deltaTime, player);
         }
 
         // Update summoned horsemen
@@ -226,6 +372,68 @@ class Boss {
             this.summonedHorsemen = this.summonedHorsemen.filter(h => h.alive);
             this.summonedHorsemen.forEach(h => h.update(deltaTime, player));
         }
+    }
+
+    // NEW BOSS UPDATE FUNCTIONS
+    updateCrystalGuardian(deltaTime, player) {
+        const attackInterval = 3000 / this.phase;
+
+        if (this.attackTimer >= attackInterval) {
+            this.attackTimer = 0;
+            const attackChoice = Utils.random(0, this.attacks.length - 1);
+            const attack = this.attacks[attackChoice];
+
+            Combat.addEffect(this.x + this.width / 2, this.y + this.height / 2, 'light');
+            return this.attack * (1 + this.phase * 0.2);
+        }
+
+        return 0;
+    }
+
+    updateShadowKing(deltaTime, player) {
+        // Teleport ability
+        if (this.canTeleport && this.teleportCooldown <= 0) {
+            if (Math.random() < 0.03 * this.phase) {
+                this.teleport();
+                this.teleportCooldown = 2500 / this.phase;
+            }
+        } else {
+            this.teleportCooldown -= deltaTime;
+        }
+
+        const attackInterval = 2500 / this.phase;
+
+        if (this.attackTimer >= attackInterval) {
+            this.attackTimer = 0;
+            Combat.addEffect(this.x + this.width / 2, this.y + this.height / 2, 'void');
+            return this.attack * (1 + this.phase * 0.3);
+        }
+
+        return 0;
+    }
+
+    updateEternalEmperor(deltaTime, player) {
+        // Teleport ability
+        if (this.canTeleport && this.teleportCooldown <= 0) {
+            if (Math.random() < 0.04 * this.phase) {
+                this.teleport();
+                this.teleportCooldown = 2000 / this.phase;
+            }
+        } else {
+            this.teleportCooldown -= deltaTime;
+        }
+
+        const attackInterval = 2000 / this.phase;
+
+        if (this.attackTimer >= attackInterval) {
+            this.attackTimer = 0;
+            // Multiple effects for the Emperor
+            Combat.addEffect(this.x + this.width / 2, this.y + this.height / 2, 'arcsis_nova');
+            Combat.addEffect(player.x + player.width / 2, player.y + player.height / 2, 'thunder');
+            return this.attack * (1 + this.phase * 0.4);
+        }
+
+        return 0;
     }
 
     checkPhaseTransition(hpPercent) {
@@ -274,6 +482,61 @@ class Boss {
                     "LIGHTNING WILL CONSUME YOU!"
                 ];
                 this.attack *= 1.4;
+            }
+        } else if (this.type === 'crystal_guardian') {
+            if (newPhase === 2) {
+                this.dialogueQueue = [
+                    "MY CRYSTAL FORM GROWS STRONGER!",
+                    "FEEL THE FULL POWER OF REFLECTION!",
+                    "YOUR ATTACKS ARE FUTILE!"
+                ];
+                this.attack *= 1.5;
+                this.defense *= 1.2;
+            }
+        } else if (this.type === 'shadow_king') {
+            if (newPhase === 2) {
+                this.dialogueQueue = [
+                    "The shadows grow deeper...",
+                    "DARKNESS CONSUMES ALL!",
+                    "PHASE TWO: VOID AWAKENING!"
+                ];
+                this.attack *= 1.4;
+            } else if (newPhase === 3) {
+                this.dialogueQueue = [
+                    "YOU HAVE ANGERED THE VOID!",
+                    "I WILL DEVOUR YOUR SOUL!",
+                    "ULTIMATE DARKNESS DESCENDS!"
+                ];
+                this.attack *= 1.6;
+                this.lifeDrain = 0.4;
+            }
+        } else if (this.type === 'eternal_emperor') {
+            if (newPhase === 2) {
+                this.dialogueQueue = [
+                    "Impressive, mortal...",
+                    "But this is just the beginning!",
+                    "ELEMENTAL FURY UNLEASHED!"
+                ];
+                this.attack *= 1.3;
+            } else if (newPhase === 3) {
+                this.dialogueQueue = [
+                    "NO! This cannot be!",
+                    "I WILL NOT FALL!",
+                    "WITNESS THE POWER OF ETERNITY!",
+                    "TIME ITSELF BENDS TO MY WILL!"
+                ];
+                this.attack *= 1.5;
+                this.defense *= 0.8;
+            } else if (newPhase === 4) {
+                this.dialogueQueue = [
+                    "IMPOSSIBLE!!!",
+                    "A MERE MORTAL CANNOT DEFEAT ME!",
+                    "I AM ETERNAL! I AM INFINITE!",
+                    "THIS IS... MY FINAL FORM!",
+                    "PREPARE FOR TOTAL ANNIHILATION!"
+                ];
+                this.attack *= 2;
+                this.defense *= 0.5;
             }
         }
     }
@@ -651,6 +914,12 @@ class Boss {
             this.drawAnizon(ctx);
         } else if (this.type === 'origami_mirda') {
             this.drawOrigamiMirda(ctx);
+        } else if (this.type === 'crystal_guardian') {
+            this.drawCrystalGuardian(ctx);
+        } else if (this.type === 'shadow_king') {
+            this.drawShadowKing(ctx);
+        } else if (this.type === 'eternal_emperor') {
+            this.drawEternalEmperor(ctx);
         }
 
         this.drawBossHealthBar(ctx);
@@ -662,6 +931,162 @@ class Boss {
         if (this.summonedHorsemen) {
             this.summonedHorsemen.forEach(h => h.draw(ctx));
         }
+    }
+
+    // NEW BOSS DRAWING FUNCTIONS
+    drawCrystalGuardian(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Crystal aura
+        const pulseSize = 15 + Math.sin(this.frame * 0.08) * 8 * this.phase;
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = '#00FFFF';
+        ctx.fillRect(-pulseSize, -pulseSize, this.width + pulseSize * 2, this.height + pulseSize * 2);
+        ctx.globalAlpha = 1;
+
+        // Crystalline body
+        ctx.fillStyle = '#66FFFF';
+        ctx.beginPath();
+        ctx.moveTo(36, 0);
+        ctx.lineTo(72, 30);
+        ctx.lineTo(60, 88);
+        ctx.lineTo(12, 88);
+        ctx.lineTo(0, 30);
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner core
+        ctx.fillStyle = '#AAFFFF';
+        ctx.fillRect(24, 30, 24, 30);
+
+        // Crystal protrusions
+        ctx.fillStyle = '#88EEFF';
+        ctx.fillRect(0, 20, 12, 36);
+        ctx.fillRect(60, 20, 12, 36);
+
+        // Eyes (glowing)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(24, 12, 8, 8);
+        ctx.fillRect(40, 12, 8, 8);
+
+        // Sparkling effect
+        if (Math.random() > 0.9) {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(Utils.random(0, 68), Utils.random(0, 84), 4, 4);
+        }
+
+        ctx.restore();
+    }
+
+    drawShadowKing(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Shadow aura
+        const pulseSize = 25 + Math.sin(this.frame * 0.04) * 12 * this.phase;
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(-pulseSize, -pulseSize, this.width + pulseSize * 2, this.height + pulseSize * 2);
+        ctx.globalAlpha = 1;
+
+        // Dark robed body
+        ctx.fillStyle = '#1A001A';
+        ctx.fillRect(16, 24, 48, 60);
+
+        // Hood
+        ctx.fillStyle = '#0D000D';
+        ctx.fillRect(12, 0, 56, 32);
+
+        // Glowing purple eyes
+        ctx.fillStyle = '#9900FF';
+        ctx.fillRect(24, 12, 10, 10);
+        ctx.fillRect(46, 12, 10, 10);
+
+        // Crown of shadows
+        ctx.fillStyle = '#4400AA';
+        ctx.fillRect(20, -8, 8, 12);
+        ctx.fillRect(36, -12, 8, 16);
+        ctx.fillRect(52, -8, 8, 12);
+
+        // Shadowy tendrils
+        ctx.fillStyle = '#330066';
+        ctx.fillRect(0, 44, 12, 28);
+        ctx.fillRect(68, 44, 12, 28);
+
+        // Shadow mist effect
+        if (Math.random() > 0.95) {
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = '#660066';
+            ctx.fillRect(Utils.random(-10, 70), Utils.random(60, 96), 20, 10);
+            ctx.globalAlpha = 1;
+        }
+
+        ctx.restore();
+    }
+
+    drawEternalEmperor(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Divine aura (changes with phase)
+        const pulseSize = 30 + Math.sin(this.frame * 0.03) * 15 * this.phase;
+        ctx.globalAlpha = 0.5;
+
+        // Color based on phase
+        const colors = ['#FFD700', '#FF6600', '#FF0000', '#FFFFFF'];
+        ctx.fillStyle = colors[this.phase - 1] || '#FFD700';
+        ctx.fillRect(-pulseSize, -pulseSize, this.width + pulseSize * 2, this.height + pulseSize * 2);
+        ctx.globalAlpha = 1;
+
+        // Massive armored body
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(24, 32, 48, 60);
+
+        // Imperial robes
+        ctx.fillStyle = '#AA0000';
+        ctx.fillRect(16, 40, 64, 52);
+
+        // Crown
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(24, 0, 48, 20);
+        ctx.fillRect(30, -12, 8, 16);
+        ctx.fillRect(44, -16, 8, 20);
+        ctx.fillRect(58, -12, 8, 16);
+
+        // Jewels in crown
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(34, -8, 4, 4);
+        ctx.fillRect(48, -12, 4, 4);
+        ctx.fillRect(62, -8, 4, 4);
+
+        // Head
+        ctx.fillStyle = '#FFE0B2';
+        ctx.fillRect(32, 8, 32, 28);
+
+        // Eyes (intense, glowing)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(36, 16, 8, 8);
+        ctx.fillRect(52, 16, 8, 8);
+
+        // Pupils
+        ctx.fillStyle = '#FF0000';
+        ctx.fillRect(38, 18, 4, 4);
+        ctx.fillRect(54, 18, 4, 4);
+
+        // Scepter
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(84, 20, 8, 60);
+        ctx.fillStyle = '#FF00FF';
+        ctx.fillRect(80, 12, 16, 16);
+
+        // Divine energy particles
+        if (Math.random() > 0.85) {
+            ctx.fillStyle = '#FFFF00';
+            ctx.fillRect(Utils.random(-20, 100), Utils.random(-20, 120), 6, 6);
+        }
+
+        ctx.restore();
     }
 
     drawAnizon(ctx) {
