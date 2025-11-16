@@ -589,6 +589,475 @@ const World = {
             spawnPlayer: { x: 400, y: 500 },
             enemies: [],
             boss: 'eternal_emperor',
+            nextArea: 'void_dimension_1'
+        },
+
+        // NEW WORLD: VOID DIMENSION
+        void_dimension_1: {
+            name: 'Void Dimension - Rift Entrance',
+            width: 25,
+            height: 18,
+            music: 'dungeon',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('void_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('void_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 64, y: 300 },
+            enemies: [
+                { type: 'void_spawn', x: 300, y: 200 },
+                { type: 'void_spawn', x: 500, y: 400 },
+                { type: 'dimensional_wraith', x: 600, y: 150 },
+                { type: 'reality_tear', x: 400, y: 350 }
+            ],
+            puzzleElements: [
+                {
+                    type: 'book',
+                    x: 200,
+                    y: 150,
+                    id: 'void_lore',
+                    title: 'Whispers from the Void',
+                    contents: 'This dimension exists between realities. The Void Weaver rules here, pulling apart the threads of existence. Beware: portals may appear randomly, warping you to unknown locations. The deeper you go, the more unstable reality becomes.'
+                },
+                { type: 'chest', x: 700, y: 100, id: 'void_chest1', contents: { type: 'coins', amount: 150 } }
+            ],
+            nextArea: 'void_dimension_core'
+        },
+
+        void_dimension_core: {
+            name: 'Void Dimension - Core of Unmaking',
+            width: 25,
+            height: 18,
+            music: 'boss',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('void_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('void_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 400, y: 500 },
+            enemies: [],
+            boss: 'void_weaver',
+            nextArea: 'phoenix_sanctuary_1'
+        },
+
+        // NEW WORLD: PHOENIX SANCTUARY
+        phoenix_sanctuary_1: {
+            name: 'Phoenix Sanctuary - Burning Gates',
+            width: 25,
+            height: 18,
+            music: 'dungeon',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('fire_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('fire_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 64, y: 300 },
+            enemies: [
+                { type: 'fire_elemental', x: 350, y: 180 },
+                { type: 'fire_elemental', x: 550, y: 380 },
+                { type: 'ash_phoenix', x: 450, y: 250 },
+                { type: 'ember_sprite', x: 250, y: 420 }
+            ],
+            puzzleElements: [
+                {
+                    type: 'book',
+                    x: 180,
+                    y: 200,
+                    id: 'phoenix_legend',
+                    title: 'The Eternal Flame',
+                    contents: 'The Phoenix Empress has burned for eons. She cannot truly die - each defeat only makes her stronger as she is reborn from the ashes. Legend says she has been defeated and reborn 1000 times. The key to victory? Overwhelming force before she can regenerate!'
+                },
+                { type: 'chest', x: 680, y: 120, id: 'phoenix_chest1', contents: { type: 'exp', amount: 800 } }
+            ],
+            nextArea: 'phoenix_sanctuary_throne'
+        },
+
+        phoenix_sanctuary_throne: {
+            name: 'Phoenix Sanctuary - Throne of Rebirth',
+            width: 25,
+            height: 18,
+            music: 'boss',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('fire_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('fire_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 400, y: 500 },
+            enemies: [],
+            boss: 'phoenix_empress',
+            nextArea: 'frozen_wastes_1'
+        },
+
+        // NEW WORLD: FROZEN WASTES
+        frozen_wastes_1: {
+            name: 'Frozen Wastes - Glacier Entrance',
+            width: 25,
+            height: 18,
+            music: 'dungeon',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('ice_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('ice_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 64, y: 300 },
+            enemies: [
+                { type: 'frost_wraith', x: 320, y: 190 },
+                { type: 'frost_wraith', x: 520, y: 390 },
+                { type: 'ice_golem', x: 420, y: 280 },
+                { type: 'blizzard_spirit', x: 600, y: 150 }
+            ],
+            puzzleElements: [
+                {
+                    type: 'book',
+                    x: 150,
+                    y: 400,
+                    id: 'frost_warning',
+                    title: 'Survivor\'s Last Words',
+                    contents: 'The cold... it seeps into your bones. The Frost Titan has ruled these wastes since the first winter. His ice armor is nearly impenetrable - only the hottest flames can melt it. I can feel my blood freezing... whoever reads this, turn back!'
+                },
+                { type: 'chest', x: 700, y: 450, id: 'frost_chest1', contents: { type: 'coins', amount: 200 } }
+            ],
+            nextArea: 'frozen_wastes_peak'
+        },
+
+        frozen_wastes_peak: {
+            name: 'Frozen Wastes - Titan\'s Peak',
+            width: 25,
+            height: 18,
+            music: 'boss',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('ice_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('ice_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 400, y: 500 },
+            enemies: [],
+            boss: 'frost_titan',
+            nextArea: 'chaos_abyss_1'
+        },
+
+        // NEW WORLD: CHAOS ABYSS
+        chaos_abyss_1: {
+            name: 'Chaos Abyss - Serpent\'s Lair',
+            width: 25,
+            height: 18,
+            music: 'dungeon',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('chaos_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('chaos_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 64, y: 300 },
+            enemies: [
+                { type: 'chaos_spawn', x: 330, y: 210 },
+                { type: 'chaos_spawn', x: 530, y: 370 },
+                { type: 'madness_eye', x: 450, y: 160 },
+                { type: 'venom_serpent', x: 280, y: 440 }
+            ],
+            puzzleElements: [
+                {
+                    type: 'book',
+                    x: 600,
+                    y: 300,
+                    id: 'chaos_madness',
+                    title: 'Ravings of a Madman',
+                    contents: 'Three heads... no wait, FIVE! It keeps GROWING! Cut one and two more appear! The venom... the madness... I can see colors that don\'t exist! The Chaos Serpent feeds on fear and confusion. Strategy is useless here - only OVERWHELMING DESTRUCTION can stop its regeneration!'
+                },
+                { type: 'chest', x: 100, y: 120, id: 'chaos_chest1', contents: { type: 'exp', amount: 1000 } }
+            ],
+            nextArea: 'chaos_abyss_heart'
+        },
+
+        chaos_abyss_heart: {
+            name: 'Chaos Abyss - Heart of Madness',
+            width: 25,
+            height: 18,
+            music: 'boss',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('chaos_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('chaos_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 400, y: 500 },
+            enemies: [],
+            boss: 'chaos_serpent',
+            nextArea: 'temporal_nexus_1'
+        },
+
+        // NEW WORLD: TEMPORAL NEXUS
+        temporal_nexus_1: {
+            name: 'Temporal Nexus - Chrono Gateway',
+            width: 25,
+            height: 18,
+            music: 'dungeon',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('time_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('time_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 64, y: 300 },
+            enemies: [
+                { type: 'time_ghost', x: 340, y: 200 },
+                { type: 'time_ghost', x: 540, y: 380 },
+                { type: 'chrono_spider', x: 430, y: 270 },
+                { type: 'paradox_entity', x: 600, y: 140 }
+            ],
+            puzzleElements: [
+                {
+                    type: 'book',
+                    x: 200,
+                    y: 250,
+                    id: 'temporal_paradox',
+                    title: 'Notes from Tomorrow',
+                    contents: 'If you\'re reading this, I\'ve already failed. The Time Warden controls all of time itself. He can rewind damage, freeze you in place, and even age you to dust instantly. The only weakness: his powers drain when he uses them too much. Force him to waste his temporal energy!'
+                },
+                { type: 'chest', x: 680, y: 100, id: 'time_chest1', contents: { type: 'coins', amount: 300 } }
+            ],
+            nextArea: 'temporal_nexus_core'
+        },
+
+        temporal_nexus_core: {
+            name: 'Temporal Nexus - Infinity Chamber',
+            width: 25,
+            height: 18,
+            music: 'boss',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('time_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('time_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 400, y: 500 },
+            enemies: [],
+            boss: 'time_warden',
+            nextArea: 'secret_realm_entrance'
+        },
+
+        // SECRET REALM - Hidden content!
+        secret_realm_entrance: {
+            name: 'Secret Realm - The Hidden Path',
+            width: 30,
+            height: 22,
+            music: 'dungeon',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+                for (let y = 0; y < 22; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 30; x++) {
+                        if (y === 0 || y === 21 || x === 0 || x === 29) {
+                            row.push('secret_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('secret_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 64, y: 350 },
+            enemies: [
+                { type: 'ancient_guardian', x: 400, y: 300 },
+                { type: 'ancient_guardian', x: 600, y: 400 },
+                { type: 'mystery_specter', x: 500, y: 200 }
+            ],
+            puzzleElements: [
+                {
+                    type: 'book',
+                    x: 250,
+                    y: 180,
+                    id: 'ultimate_secret',
+                    title: 'The Ultimate Power',
+                    contents: 'You have found the Secret Realm! Here lie the most powerful abilities in existence. The Storm Oracle guards the way forward. Beyond lies treasures of unimaginable power - legendary weapons, ancient spells, and the key to unlocking your TRUE POTENTIAL! But beware: once you gain this power, you may never be the same...'
+                },
+                { type: 'chest', x: 800, y: 150, id: 'secret_chest1', contents: { type: 'exp', amount: 5000 } },
+                { type: 'chest', x: 850, y: 500, id: 'secret_chest2', contents: { type: 'coins', amount: 1000 } },
+                { type: 'chest', x: 150, y: 600, id: 'secret_chest3', contents: { type: 'mega_potion', amount: 3 } }
+            ],
+            nextArea: 'secret_realm_throne'
+        },
+
+        secret_realm_throne: {
+            name: 'Secret Realm - Oracle\'s Domain',
+            width: 25,
+            height: 18,
+            music: 'boss',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('secret_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('secret_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 400, y: 500 },
+            enemies: [],
+            boss: 'storm_oracle',
             isFinalBoss: true
         },
 

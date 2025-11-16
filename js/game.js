@@ -11,6 +11,10 @@ const Game = {
     state: 'menu', // menu, character_select, playing, paused, dialogue, boss_intro, game_over, victory, shop, skills
     currentLevel: 1,
     defeatedBosses: [],
+    anizonDefeatHandled: false, // Guard to prevent event spam
+
+    // Cooldown system for all events
+    eventCooldowns: {},
 
     // Menu state
     menuSelection: 0,
@@ -123,6 +127,12 @@ const Game = {
 
             case 'game_over':
                 if (Input.wasJustPressed('Space') || Input.wasJustPressed('Enter')) {
+                    // DEATH REWARD: Grant extra heart on death (max 7)
+                    if (Player.maxHearts < CONSTANTS.MAX_HEARTS) {
+                        Player.maxHearts++;
+                        Player.permanentDeaths++;
+                        Fairy.speak(`Death makes you stronger! Max hearts: ${Player.maxHearts}/7`);
+                    }
                     this.state = 'menu';
                 }
                 break;
@@ -332,17 +342,22 @@ const Game = {
 
             // Handle Anizon defeat specially
             if (Bosses.currentBoss && Bosses.currentBoss.type === 'anizon') {
-                Player.onAnizonDefeat();
+                // CRITICAL FIX: Only handle defeat ONCE using a guard flag
+                if (!this.anizonDefeatHandled) {
+                    this.anizonDefeatHandled = true; // Prevent spam!
+                    Player.onAnizonDefeat();
 
-                // Anizon appears in EVERY level - transition to next with new Anizon
-                setTimeout(() => {
-                    if (area.nextArea) {
-                        this.transitionToArea(area.nextArea);
-                    } else {
-                        // Loop back or generate endless dungeon
-                        this.generateNextDungeonLevel();
-                    }
-                }, 5000);
+                    // Anizon appears in EVERY level - transition to next with new Anizon
+                    setTimeout(() => {
+                        this.anizonDefeatHandled = false; // Reset for next encounter
+                        if (area.nextArea) {
+                            this.transitionToArea(area.nextArea);
+                        } else {
+                            // Loop back or generate endless dungeon
+                            this.generateNextDungeonLevel();
+                        }
+                    }, 5000);
+                }
             } else {
                 if (!this.defeatedBosses.includes(area.boss)) {
                     this.defeatedBosses.push(area.boss);
