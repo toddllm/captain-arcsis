@@ -1018,9 +1018,17 @@ const Game = {
         ctx.translate(x + size / 2, y + size / 2);
 
         ctx.beginPath();
-        ctx.moveTo(0, size * 0.3);
-        ctx.bezierCurveTo(-size * 0.5, -size * 0.3, -size * 0.5, size * 0.1, 0, size * 0.5);
-        ctx.bezierCurveTo(size * 0.5, size * 0.1, size * 0.5, -size * 0.3, 0, size * 0.3);
+        // Start at bottom point of heart
+        ctx.moveTo(0, size * 0.35);
+        // Left side curve (bottom to top-left bump)
+        ctx.bezierCurveTo(-size * 0.1, size * 0.2, -size * 0.5, size * 0.05, -size * 0.5, -size * 0.15);
+        // Top-left bump
+        ctx.bezierCurveTo(-size * 0.5, -size * 0.4, -size * 0.25, -size * 0.45, 0, -size * 0.25);
+        // Top-right bump
+        ctx.bezierCurveTo(size * 0.25, -size * 0.45, size * 0.5, -size * 0.4, size * 0.5, -size * 0.15);
+        // Right side curve (top-right bump to bottom)
+        ctx.bezierCurveTo(size * 0.5, size * 0.05, size * 0.1, size * 0.2, 0, size * 0.35);
+        ctx.closePath();
 
         if (filled) {
             ctx.fill();
