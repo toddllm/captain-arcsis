@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowCloudFrontServicePrincipal",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudfront.amazonaws.com"
+      },
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::captain-arcsis-717984198385/*",
+      "Condition": {
+        "StringEquals": {
+          "AWS:SourceArn": "arn:aws:cloudfront::717984198385:distribution/E2K4437PWO7HA8"
+        }
+      }
+    }
+  ]
+}
