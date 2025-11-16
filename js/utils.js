@@ -258,3 +258,88 @@ const Input = {
         this.keyPressed = {};
     }
 };
+
+// Screen Shake Effect System
+const ScreenShake = {
+    intensity: 0,
+    duration: 0,
+    elapsed: 0,
+    offsetX: 0,
+    offsetY: 0,
+
+    // Trigger a screen shake
+    shake: function(intensity = 5, duration = 200) {
+        // Only override if new shake is stronger
+        if (intensity > this.intensity) {
+            this.intensity = intensity;
+            this.duration = duration;
+            this.elapsed = 0;
+        }
+    },
+
+    // Preset shake types
+    light: function() {
+        this.shake(3, 150);
+    },
+
+    medium: function() {
+        this.shake(6, 200);
+    },
+
+    heavy: function() {
+        this.shake(10, 300);
+    },
+
+    critical: function() {
+        this.shake(8, 250);
+    },
+
+    boss: function() {
+        this.shake(12, 400);
+    },
+
+    // Update shake effect (call each frame)
+    update: function(deltaTime) {
+        if (this.duration <= 0) {
+            this.offsetX = 0;
+            this.offsetY = 0;
+            return;
+        }
+
+        this.elapsed += deltaTime;
+
+        if (this.elapsed >= this.duration) {
+            this.intensity = 0;
+            this.duration = 0;
+            this.elapsed = 0;
+            this.offsetX = 0;
+            this.offsetY = 0;
+            return;
+        }
+
+        // Calculate decay (shake reduces over time)
+        const progress = this.elapsed / this.duration;
+        const decay = 1 - Utils.easeOutCubic(progress);
+        const currentIntensity = this.intensity * decay;
+
+        // Random offset with decay
+        this.offsetX = (Math.random() * 2 - 1) * currentIntensity;
+        this.offsetY = (Math.random() * 2 - 1) * currentIntensity;
+    },
+
+    // Apply shake to canvas context
+    apply: function(ctx) {
+        if (this.offsetX !== 0 || this.offsetY !== 0) {
+            ctx.translate(this.offsetX, this.offsetY);
+        }
+    },
+
+    // Reset shake
+    reset: function() {
+        this.intensity = 0;
+        this.duration = 0;
+        this.elapsed = 0;
+        this.offsetX = 0;
+        this.offsetY = 0;
+    }
+};

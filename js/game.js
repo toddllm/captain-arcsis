@@ -71,6 +71,9 @@ const Game = {
             Audio.resume();
         }
 
+        // Update screen shake effect
+        ScreenShake.update(deltaTime);
+
         switch (this.state) {
             case 'menu':
                 this.updateMenu();
@@ -608,6 +611,10 @@ const Game = {
         this.ctx.fillStyle = '#000000';
         this.ctx.fillRect(0, 0, CONSTANTS.CANVAS_WIDTH, CONSTANTS.CANVAS_HEIGHT);
 
+        // Apply screen shake effect
+        this.ctx.save();
+        ScreenShake.apply(this.ctx);
+
         switch (this.state) {
             case 'menu':
                 this.renderMenu();
@@ -646,6 +653,9 @@ const Game = {
                 this.renderVictory();
                 break;
         }
+
+        // Restore context after screen shake
+        this.ctx.restore();
     },
 
     renderMenu: function() {
