@@ -140,6 +140,14 @@ const Game = {
                         Player.maxHearts++;
                         Player.permanentDeaths++;
                         console.log('[DEBUG] Death progression! maxHearts:', Player.maxHearts, 'permanentDeaths:', Player.permanentDeaths);
+
+                        // CRITICAL FIX: Restore player health before saving!
+                        // Otherwise the save will have dead/low health values
+                        Player.hearts = Player.maxHearts;
+                        Player.hp = Player.heartHp;
+                        console.log('[DEBUG] Restored player health - hearts:', Player.hearts, 'hp:', Player.hp);
+
+                        this.showNotification(`DEATH BONUS! Max Hearts: ${Player.maxHearts}/7`, '#FF00FF');
                         Fairy.speak(`Death makes you stronger! Max hearts: ${Player.maxHearts}/7`);
 
                         // CRITICAL: Save death progression immediately so it persists
@@ -150,6 +158,10 @@ const Game = {
                             playTime: this.playTime
                         });
                         console.log('[DEBUG] Death progression saved to localStorage');
+                    } else {
+                        // Already at max hearts, just restore health
+                        Player.hearts = Player.maxHearts;
+                        Player.hp = Player.heartHp;
                     }
                     this.state = 'menu';
                 }
@@ -226,7 +238,8 @@ const Game = {
     },
 
     startNewGame: function(arcsisType = 'BLUE') {
-        Player.init(100, 300, arcsisType);
+        // CRITICAL FIX: Use fullReset to reset ALL player stats (fixes "scamming" bug)
+        Player.fullReset(arcsisType);
         Enemies.clear();
         Puzzles.clear();
         Bosses.clear();
@@ -236,11 +249,14 @@ const Game = {
         this.defeatedBosses = [];
         this.currentLevel = 1;
         this.playTime = 0;
+        this.anizonDefeatHandled = false; // Reset the guard flag too
 
         World.loadArea('forest');
 
         this.state = 'dialogue';
         Dialogue.start('intro');
+
+        console.log('[DEBUG] New game started with full reset');
     },
 
     loadGame: function() {
@@ -364,7 +380,20 @@ const Game = {
                 if (!this.anizonDefeatHandled) {
                     this.anizonDefeatHandled = true; // Prevent spam!
                     console.log('[DEBUG] Anizon defeated! Calling onAnizonDefeat once.');
+                    console.log('[DEBUG] Player anizonDefeats BEFORE:', Player.anizonDefeats);
                     Player.onAnizonDefeat();
+                    console.log('[DEBUG] Player anizonDefeats AFTER:', Player.anizonDefeats);
+
+                    // Save immediately after Anizon defeat to prevent duplicate rewards
+                    SaveSystem.save({
+                        currentLevel: this.currentLevel,
+                        currentArea: World.currentArea,
+                        defeatedBosses: this.defeatedBosses,
+                        playTime: this.playTime
+                    });
+                    console.log('[DEBUG] Saved game after Anizon defeat');
+
+                    this.showNotification(`ANIZON DEFEATED! +${Player.anizonDefeats} Secret Keys!`, '#FFD700');
 
                     // Anizon appears in EVERY level - transition to next with new Anizon
                     setTimeout(() => {
