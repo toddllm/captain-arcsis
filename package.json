@@ -1,0 +1,25 @@
+{
+  "name": "captain-arcsis",
+  "version": "1.0.0",
+  "description": "Captain Arcsis - Enhanced Edition - An epic 8-bit 2D dungeon adventure game",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "playwright test tests/smoke.spec.js",
+    "test:ui": "playwright test --ui",
+    "test:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  },
+  "keywords": [
+    "game",
+    "8-bit",
+    "dungeon",
+    "adventure",
+    "html5",
+    "canvas"
+  ],
+  "author": "Captain Arcsis Team",
+  "license": "MIT"
+}
