@@ -155,8 +155,8 @@ const Puzzles = {
             }
         });
 
-        // Check for interactions
-        if (Input.wasJustPressed('KeyE')) {
+        // Check for interactions (but not if book display is active)
+        if (Input.wasJustPressed('KeyE') && !this.bookDisplayActive) {
             this.checkInteractions(player);
         }
     },
