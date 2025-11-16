@@ -66,6 +66,13 @@ const World = {
                     id: 'forest_guide',
                     title: 'A Traveler\'s Warning',
                     contents: 'BEWARE! This forest is no longer safe. Corrupted creatures roam these woods. I have left this note for any who follow. Use WASD to move carefully. That mysterious red button ahead... DO NOT PRESS IT! It is a trap set by the evil Anizon! If you must explore, prepare yourself for battle. May Lica, the Eternal Guardian, watch over you.'
+                },
+                {
+                    type: 'pestle',
+                    x: 250,
+                    y: 320,
+                    id: 'forest_pestle',
+                    reward: 'health_potion'
                 }
             ]
         },
@@ -992,6 +999,9 @@ const World = {
                         break;
                     case 'book':
                         puzzleElem = Puzzles.createBook(elem.x, elem.y, elem.id, elem.title, elem.contents);
+                        break;
+                    case 'pestle':
+                        puzzleElem = Puzzles.createPestle(elem.x, elem.y, elem.id, elem.reward);
                         break;
                 }
                 if (puzzleElem) {

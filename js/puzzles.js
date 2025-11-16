@@ -121,6 +121,19 @@ const Puzzles = {
         };
     },
 
+    createPestle: function(x, y, id, reward = 'health_potion') {
+        return {
+            type: 'pestle',
+            x: x,
+            y: y,
+            width: 32,
+            height: 32,
+            id: id,
+            reward: reward, // What the pestle gives when activated
+            activated: false
+        };
+    },
+
     addElement: function(element) {
         this.elements.push(element);
     },
@@ -260,6 +273,25 @@ const Puzzles = {
                     this.showBookContents(element);
                     Audio.dialogueBeep();
                     Fairy.speak(`"${element.title}" - Ancient knowledge revealed!`);
+                }
+                break;
+
+            case 'pestle':
+                if (!element.activated) {
+                    element.activated = true;
+                    // Grant reward based on type
+                    if (element.reward === 'health_potion') {
+                        player.potions.health++;
+                        Fairy.speak("You ground herbs with the pestle! Got a Health Potion!");
+                    } else if (element.reward === 'mana_potion') {
+                        player.potions.mana++;
+                        Fairy.speak("You ground mystic crystals! Got a Mana Potion!");
+                    } else if (element.reward === 'mega_potion') {
+                        player.potions.mega++;
+                        Fairy.speak("Ancient alchemy! Got a Mega Potion!");
+                    }
+                    Audio.puzzleSolve();
+                    this.solved[element.id] = true;
                 }
                 break;
         }
@@ -556,6 +588,45 @@ const Puzzles = {
                     ctx.globalAlpha = 0.5;
                     ctx.fillStyle = '#8B4513';
                     ctx.fillRect(element.x, element.y, element.width, element.height);
+                    ctx.globalAlpha = 1;
+                }
+                break;
+
+            case 'pestle':
+                if (!element.activated) {
+                    // Mortar (bowl)
+                    ctx.fillStyle = '#8B8B8B';
+                    ctx.fillRect(element.x + 4, element.y + 16, 24, 16);
+                    ctx.fillStyle = '#6B6B6B';
+                    ctx.fillRect(element.x + 6, element.y + 18, 20, 12);
+
+                    // Pestle (grinding stick)
+                    ctx.fillStyle = '#D2B48C';
+                    ctx.fillRect(element.x + 12, element.y + 2, 8, 20);
+                    ctx.fillStyle = '#8B7355';
+                    ctx.fillRect(element.x + 10, element.y, 12, 6);
+
+                    // Herbs/ingredients in mortar
+                    ctx.fillStyle = '#228B22';
+                    ctx.fillRect(element.x + 10, element.y + 20, 4, 4);
+                    ctx.fillRect(element.x + 16, element.y + 22, 3, 3);
+                    ctx.fillRect(element.x + 20, element.y + 21, 3, 3);
+
+                    // Magical glow indicating interactable
+                    if (Math.sin(Date.now() * 0.004) > 0) {
+                        ctx.strokeStyle = '#00FF00';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(element.x - 2, element.y - 2, element.width + 4, element.height + 4);
+                    }
+                } else {
+                    // Used pestle (faded, empty)
+                    ctx.globalAlpha = 0.5;
+                    ctx.fillStyle = '#8B8B8B';
+                    ctx.fillRect(element.x + 4, element.y + 16, 24, 16);
+                    ctx.fillStyle = '#6B6B6B';
+                    ctx.fillRect(element.x + 6, element.y + 18, 20, 12);
+                    ctx.fillStyle = '#D2B48C';
+                    ctx.fillRect(element.x + 12, element.y + 2, 8, 20);
                     ctx.globalAlpha = 1;
                 }
                 break;
