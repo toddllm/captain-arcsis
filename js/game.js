@@ -22,7 +22,7 @@ const Game = {
 
     // Pause menu
     pauseSelection: 0,
-    pauseOptions: ['Resume', 'Shop', 'Skills', 'Save Game', 'Quit to Menu'],
+    pauseOptions: ['Resume', 'Shop', 'Skills', 'Save Game', 'Music: On', 'Quit to Menu'],
 
     // Shop state
     shopSelection: 0,
@@ -397,6 +397,9 @@ const Game = {
     },
 
     updatePaused: function() {
+        // Update music toggle label to reflect current state
+        this.pauseOptions[4] = Audio.isMusicEnabled() ? 'Music: On' : 'Music: Off';
+
         if (Input.wasJustPressed('Escape')) {
             this.state = 'playing';
             Audio.menuSelect();
@@ -444,7 +447,12 @@ const Game = {
                 Fairy.speak("Game saved!");
                 break;
 
-            case 4: // Quit to Menu
+            case 4: // Music Toggle
+                const musicEnabled = Audio.toggleMusic();
+                Fairy.speak(musicEnabled ? "Music enabled!" : "Music disabled!");
+                break;
+
+            case 5: // Quit to Menu
                 Audio.stopMusic();
                 this.state = 'menu';
                 break;

@@ -5,6 +5,7 @@ const Audio = {
     context: null,
     masterVolume: 0.5,
     musicPlaying: false,
+    musicEnabled: true,
     currentMusic: null,
     currentMusicSource: null,
     musicBuffers: {},
@@ -12,6 +13,11 @@ const Audio = {
 
     init: function() {
         this.context = new (window.AudioContext || window.webkitAudioContext)();
+        // Load music preference from localStorage
+        const savedMusicPref = localStorage.getItem('captainArcsis_musicEnabled');
+        if (savedMusicPref !== null) {
+            this.musicEnabled = savedMusicPref === 'true';
+        }
         // Preload WAV music files
         this.loadMusicFile('forest_theme', 'forest_theme.wav');
         this.loadMusicFile('dungeon_theme', 'dungeon_theme.wav');
@@ -269,7 +275,7 @@ const Audio = {
 
     // Background music (simple loop)
     startForestMusic: function() {
-        if (this.musicPlaying) return;
+        if (this.musicPlaying || !this.musicEnabled) return;
         this.musicPlaying = true;
 
         // Try to play WAV file first, fallback to generated
@@ -294,7 +300,7 @@ const Audio = {
     },
 
     startDungeonMusic: function() {
-        if (this.musicPlaying) return;
+        if (this.musicPlaying || !this.musicEnabled) return;
         this.musicPlaying = true;
 
         // Try to play WAV file first, fallback to generated
@@ -319,7 +325,7 @@ const Audio = {
     },
 
     startBossMusic: function() {
-        if (this.musicPlaying) return;
+        if (this.musicPlaying || !this.musicEnabled) return;
         this.musicPlaying = true;
         this.playBossLoop();
     },
@@ -352,7 +358,7 @@ const Audio = {
 
     // Start crystal caverns music
     startCrystalMusic: function() {
-        if (this.musicPlaying) return;
+        if (this.musicPlaying || !this.musicEnabled) return;
         this.musicPlaying = true;
         this.playCrystalLoop();
     },
@@ -376,7 +382,7 @@ const Audio = {
 
     // Start shadow realm music
     startShadowMusic: function() {
-        if (this.musicPlaying) return;
+        if (this.musicPlaying || !this.musicEnabled) return;
         this.musicPlaying = true;
         this.playShadowLoop();
     },
@@ -399,7 +405,7 @@ const Audio = {
 
     // Start sky citadel music
     startSkyMusic: function() {
-        if (this.musicPlaying) return;
+        if (this.musicPlaying || !this.musicEnabled) return;
         this.musicPlaying = true;
         this.playSkyLoop();
     },
@@ -431,5 +437,20 @@ const Audio = {
             this.currentMusicSource.stop();
             this.currentMusicSource = null;
         }
+    },
+
+    toggleMusic: function() {
+        this.musicEnabled = !this.musicEnabled;
+        // Save preference to localStorage
+        localStorage.setItem('captainArcsis_musicEnabled', this.musicEnabled.toString());
+
+        if (!this.musicEnabled) {
+            this.stopMusic();
+        }
+        return this.musicEnabled;
+    },
+
+    isMusicEnabled: function() {
+        return this.musicEnabled;
     }
 };
