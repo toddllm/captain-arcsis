@@ -80,6 +80,7 @@ const CONSTANTS = {
     PLAYER_BASE_ATTACK: 10,
     PLAYER_BASE_DEFENSE: 5,
     PLAYER_SPEED: 3,
+    MAX_HEARTS: 7, // Maximum hearts player can have (gained through deaths)
 
     // Combat
     ATTACK_COOLDOWN: 500,

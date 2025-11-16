@@ -237,6 +237,229 @@ class Boss {
                 ];
                 break;
 
+            case 'void_weaver':
+                // VOID WEAVER - Dimensional Horror
+                this.name = 'VOID WEAVER - Ender of Realities';
+                this.x = 400;
+                this.y = 130;
+                this.width = 88;
+                this.height = 100;
+                this.maxHp = 7500;
+                this.hp = 7500;
+                this.attack = 110;
+                this.defense = 45;
+                this.phase = 1;
+                this.maxPhases = 3;
+
+                this.canTeleport = true;
+                this.portalCount = 0;
+                this.dimensionalRift = false;
+
+                this.attacks = [
+                    'void_bolt',
+                    'dimensional_tear',
+                    'portal_storm',
+                    'reality_unravel',
+                    'cosmic_horror',
+                    'end_of_existence'
+                ];
+
+                this.introDialogue = [
+                    "The fabric of reality... so fragile...",
+                    "I am the VOID WEAVER!",
+                    "I exist BETWEEN dimensions!",
+                    "Your world is but a thread to me!",
+                    "I shall UNRAVEL your existence!",
+                    "WITNESS THE END OF ALL THINGS!"
+                ];
+                break;
+
+            case 'phoenix_empress':
+                // PHOENIX EMPRESS - Queen of Flames
+                this.name = 'PHOENIX EMPRESS - Eternal Flame';
+                this.x = 400;
+                this.y = 140;
+                this.width = 76;
+                this.height = 92;
+                this.maxHp = 5000;
+                this.hp = 5000;
+                this.attack = 95;
+                this.defense = 35;
+                this.phase = 1;
+                this.maxPhases = 3;
+
+                this.canRebirth = true;
+                this.rebirthCount = 0;
+                this.maxRebirths = 2;
+                this.burnDamage = 15;
+
+                this.attacks = [
+                    'flame_burst',
+                    'inferno_wave',
+                    'ash_storm',
+                    'rebirth_explosion',
+                    'solar_flare',
+                    'eternal_combustion'
+                ];
+
+                this.introDialogue = [
+                    "From ashes, I RISE!",
+                    "I am the PHOENIX EMPRESS!",
+                    "My flames have burned for ETERNITY!",
+                    "You cannot kill what is REBORN!",
+                    "I will reduce you to CINDERS!",
+                    "BURN IN ETERNAL FIRE!"
+                ];
+                break;
+
+            case 'frost_titan':
+                // FROST TITAN - Lord of Winter
+                this.name = 'FROST TITAN - Harbinger of Ice Age';
+                this.x = 400;
+                this.y = 110;
+                this.width = 100;
+                this.height = 120;
+                this.maxHp = 9000;
+                this.hp = 9000;
+                this.attack = 85;
+                this.defense = 90;
+                this.phase = 1;
+                this.maxPhases = 3;
+
+                this.freezeAura = true;
+                this.iceArmor = 30;
+                this.slowEffect = 0.5;
+
+                this.attacks = [
+                    'frost_breath',
+                    'blizzard',
+                    'ice_prison',
+                    'glacial_crush',
+                    'absolute_zero',
+                    'eternal_winter'
+                ];
+
+                this.introDialogue = [
+                    "...",
+                    "Cold... so cold...",
+                    "I am the FROST TITAN!",
+                    "I bring the END of warm days!",
+                    "Your blood will FREEZE!",
+                    "EMBRACE THE ETERNAL WINTER!"
+                ];
+                break;
+
+            case 'chaos_serpent':
+                // CHAOS SERPENT - Multi-headed Beast
+                this.name = 'CHAOS SERPENT - Hydra of Madness';
+                this.x = 400;
+                this.y = 120;
+                this.width = 96;
+                this.height = 108;
+                this.maxHp = 8000;
+                this.hp = 8000;
+                this.attack = 130;
+                this.defense = 50;
+                this.phase = 1;
+                this.maxPhases = 4;
+
+                this.headCount = 3;
+                this.maxHeads = 7;
+                this.regeneration = 100;
+
+                this.attacks = [
+                    'triple_strike',
+                    'venom_spray',
+                    'head_regrowth',
+                    'chaos_coil',
+                    'madness_gaze',
+                    'multi_head_assault'
+                ];
+
+                this.introDialogue = [
+                    "HISSSSS...",
+                    "We are the CHAOS SERPENT!",
+                    "Cut one head, TWO grow back!",
+                    "Our venom courses with MADNESS!",
+                    "You face not ONE, but MANY!",
+                    "DROWN IN CHAOS!"
+                ];
+                break;
+
+            case 'time_warden':
+                // TIME WARDEN - Master of Chronology
+                this.name = 'TIME WARDEN - Keeper of Ages';
+                this.x = 400;
+                this.y = 125;
+                this.width = 68;
+                this.height = 84;
+                this.maxHp = 6500;
+                this.hp = 6500;
+                this.attack = 100;
+                this.defense = 55;
+                this.phase = 1;
+                this.maxPhases = 3;
+
+                this.canRewind = true;
+                this.timeFrozen = false;
+                this.ageAcceleration = 0;
+
+                this.attacks = [
+                    'temporal_bolt',
+                    'time_stop',
+                    'age_acceleration',
+                    'chrono_rewind',
+                    'paradox_strike',
+                    'end_of_time'
+                ];
+
+                this.introDialogue = [
+                    "Time... flows differently here...",
+                    "I am the TIME WARDEN!",
+                    "I have seen the END of all things!",
+                    "Past, present, future... I control ALL!",
+                    "Your time has RUN OUT!",
+                    "WITNESS YOUR END BEFORE IT BEGINS!"
+                ];
+                break;
+
+            case 'storm_oracle':
+                // STORM ORACLE - Prophet of Destruction
+                this.name = 'STORM ORACLE - Voice of Tempests';
+                this.x = 400;
+                this.y = 135;
+                this.width = 72;
+                this.height = 88;
+                this.maxHp = 5500;
+                this.hp = 5500;
+                this.attack = 115;
+                this.defense = 40;
+                this.phase = 1;
+                this.maxPhases = 3;
+
+                this.predictAttacks = true;
+                this.stormIntensity = 1;
+                this.lightningStacks = 0;
+
+                this.attacks = [
+                    'lightning_prophecy',
+                    'storm_surge',
+                    'thunder_dome',
+                    'hurricane_force',
+                    'chain_lightning',
+                    'apocalyptic_storm'
+                ];
+
+                this.introDialogue = [
+                    "The storms speak to me...",
+                    "I am the STORM ORACLE!",
+                    "I see your DEFEAT in the clouds!",
+                    "Lightning answers MY call!",
+                    "The tempest is my WEAPON!",
+                    "BE SWEPT AWAY BY THE STORM!"
+                ];
+                break;
+
             default:
                 this.name = 'Unknown Boss';
                 this.x = 400;

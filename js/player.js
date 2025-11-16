@@ -13,6 +13,7 @@ const Player = {
     // Stats - Now using HEARTS system!
     hearts: 3,
     maxHearts: 3,
+    permanentDeaths: 0, // Track total deaths for progression
 
     // Arcsis Type (YELLOW, RED, GREEN, BLUE)
     arcsisType: 'BLUE', // Default type
@@ -96,6 +97,55 @@ const Player = {
     specialAbilityCharge: 0,
     specialAbilityCooldown: 0,
     canUseSpecial: true,
+
+    // ULTIMATE SYSTEM - Multiple ultimates to unlock!
+    currentUltimate: 'arcsis_nova',
+    unlockedUltimates: ['arcsis_nova'],
+    ultimateData: {
+        arcsis_nova: {
+            name: 'Arcsis Nova',
+            description: 'Massive explosion that damages all enemies',
+            cooldown: 15000,
+            unlockCost: 0
+        },
+        void_rift: {
+            name: 'Void Rift',
+            description: 'Open a rift that pulls and damages enemies',
+            cooldown: 20000,
+            unlockCost: 500
+        },
+        phoenix_rebirth: {
+            name: 'Phoenix Rebirth',
+            description: 'Revive with full health when killed (once per battle)',
+            cooldown: 60000,
+            unlockCost: 750
+        },
+        frost_apocalypse: {
+            name: 'Frost Apocalypse',
+            description: 'Freeze all enemies and deal massive damage',
+            cooldown: 25000,
+            unlockCost: 1000
+        },
+        chaos_storm: {
+            name: 'Chaos Storm',
+            description: 'Summon random devastating effects',
+            cooldown: 18000,
+            unlockCost: 1200
+        },
+        time_rewind: {
+            name: 'Time Rewind',
+            description: 'Rewind your health to 3 seconds ago',
+            cooldown: 30000,
+            unlockCost: 1500
+        },
+        lightning_avatar: {
+            name: 'Lightning Avatar',
+            description: 'Transform into pure lightning for 5 seconds',
+            cooldown: 35000,
+            unlockCost: 2000
+        }
+    },
+    healthHistory: [], // For time rewind ultimate
 
     // Dash ability
     dashing: false,
@@ -391,6 +441,20 @@ const Player = {
         // Handle special ability (R key) - requires full hearts!
         if (Input.wasJustPressed('KeyR') && this.canUseSpecial && this.specialAbilityCooldown <= 0) {
             this.useSpecialAbility();
+        }
+
+        // Cycle through ultimates (T key)
+        if (Input.wasJustPressed('KeyT')) {
+            this.cycleUltimate();
+        }
+
+        // Track health history for Time Rewind ultimate (every 100ms)
+        if (!this.lastHealthTrack || Date.now() - this.lastHealthTrack > 100) {
+            this.healthHistory.unshift({ hp: this.hp, hearts: this.hearts });
+            if (this.healthHistory.length > 30) { // Keep 3 seconds of history
+                this.healthHistory.pop();
+            }
+            this.lastHealthTrack = Date.now();
         }
 
         // Handle potion usage
@@ -780,17 +844,104 @@ const Player = {
     useSpecialAbility: function() {
         if (!this.canUseSpecial) return;
 
-        // ARCSIS NOVA - Massive area damage + heal
-        this.specialAbilityCooldown = 15000; // 15 second cooldown
+        const ultimate = this.ultimateData[this.currentUltimate];
+        this.specialAbilityCooldown = ultimate.cooldown;
 
         Audio.specialCharge();
 
-        // Create massive explosion effect
-        Combat.addEffect(this.x + this.width / 2, this.y + this.height / 2, 'arcsis_nova');
+        // Execute different ultimates based on current selection
+        switch (this.currentUltimate) {
+            case 'arcsis_nova':
+                // ARCSIS NOVA - Massive area damage + heal
+                Combat.addEffect(this.x + this.width / 2, this.y + this.height / 2, 'arcsis_nova');
+                this.powerUps.damageBoost = 5000;
+                Fairy.speak("ARCSIS NOVA! Devastating explosion!");
+                break;
 
-        // Damage will be applied in Enemies.checkCollisions
-        // Also grants temporary damage boost
-        this.powerUps.damageBoost = 5000; // 5 seconds of damage boost
+            case 'void_rift':
+                // VOID RIFT - Pull and damage enemies
+                Combat.addEffect(this.x + this.width / 2, this.y + this.height / 2, 'void_rift');
+                this.powerUps.damageBoost = 3000;
+                Fairy.speak("VOID RIFT! Reality tears apart!");
+                break;
+
+            case 'phoenix_rebirth':
+                // PHOENIX REBIRTH - Auto-revive on next death
+                this.phoenixRebirthActive = true;
+                Combat.addEffect(this.x + this.width / 2, this.y + this.height / 2, 'phoenix_rebirth');
+                Fairy.speak("PHOENIX REBIRTH! You cannot die!");
+                break;
+
+            case 'frost_apocalypse':
+                // FROST APOCALYPSE - Freeze all enemies
+                Combat.addEffect(this.x + this.width / 2, this.y + this.height / 2, 'frost_apocalypse');
+                this.powerUps.damageBoost = 8000;
+                Fairy.speak("FROST APOCALYPSE! All shall freeze!");
+                break;
+
+            case 'chaos_storm':
+                // CHAOS STORM - Random powerful effects
+                Combat.addEffect(this.x + this.width / 2, this.y + this.height / 2, 'chaos_storm');
+                this.powerUps.damageBoost = 10000;
+                this.powerUps.speedBoost = 5000;
+                this.heal(50);
+                Fairy.speak("CHAOS STORM! Unpredictable destruction!");
+                break;
+
+            case 'time_rewind':
+                // TIME REWIND - Restore health from 3 seconds ago
+                if (this.healthHistory.length > 0) {
+                    const oldHealth = this.healthHistory[0];
+                    this.hp = Math.max(this.hp, oldHealth.hp);
+                    this.hearts = Math.max(this.hearts, oldHealth.hearts);
+                }
+                Combat.addEffect(this.x + this.width / 2, this.y + this.height / 2, 'time_rewind');
+                Fairy.speak("TIME REWIND! Health restored!");
+                break;
+
+            case 'lightning_avatar':
+                // LIGHTNING AVATAR - Transform into lightning
+                this.lightningAvatarActive = true;
+                this.lightningAvatarDuration = 5000;
+                this.invincible = true;
+                this.invincibilityTimer = 5000;
+                this.powerUps.speedBoost = 5000;
+                this.powerUps.damageBoost = 5000;
+                Combat.addEffect(this.x + this.width / 2, this.y + this.height / 2, 'lightning_avatar');
+                Fairy.speak("LIGHTNING AVATAR! Pure energy!");
+                break;
+        }
+    },
+
+    unlockUltimate: function(ultimateId) {
+        if (this.unlockedUltimates.includes(ultimateId)) {
+            return false; // Already unlocked
+        }
+
+        const cost = this.ultimateData[ultimateId].unlockCost;
+        if (this.coins >= cost) {
+            this.coins -= cost;
+            this.unlockedUltimates.push(ultimateId);
+            Fairy.speak(`Unlocked ${this.ultimateData[ultimateId].name}!`);
+            return true;
+        }
+        return false;
+    },
+
+    switchUltimate: function(ultimateId) {
+        if (this.unlockedUltimates.includes(ultimateId)) {
+            this.currentUltimate = ultimateId;
+            Fairy.speak(`Switched to ${this.ultimateData[ultimateId].name}!`);
+            return true;
+        }
+        return false;
+    },
+
+    cycleUltimate: function() {
+        const currentIndex = this.unlockedUltimates.indexOf(this.currentUltimate);
+        const nextIndex = (currentIndex + 1) % this.unlockedUltimates.length;
+        this.currentUltimate = this.unlockedUltimates[nextIndex];
+        Fairy.speak(`Ultimate: ${this.ultimateData[this.currentUltimate].name}`);
     },
 
     // Add to combo
@@ -1399,7 +1550,10 @@ const Player = {
             bossesDefeated: this.bossesDefeated,
             secretsFound: this.secretsFound,
             maxLevelReached: this.maxLevelReached,
-            questFlags: Utils.clone(this.questFlags)
+            questFlags: Utils.clone(this.questFlags),
+            permanentDeaths: this.permanentDeaths,
+            currentUltimate: this.currentUltimate,
+            unlockedUltimates: [...this.unlockedUltimates]
         };
     },
 
