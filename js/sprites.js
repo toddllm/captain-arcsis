@@ -527,6 +527,13 @@ const Sprites = {
         ctx.textAlign = 'center';
         ctx.globalAlpha = 1 - (frame / 30);
 
+        // Pulsing glow effect - intensity scales with combo count
+        const glowIntensity = Math.min(combo * 2, 20); // Max glow at 10+ combo
+        const pulseSpeed = 0.15 + (combo * 0.02); // Faster pulse for higher combos
+        const glowPulse = Math.sin(frame * pulseSpeed) * 0.5 + 0.5; // 0 to 1
+        ctx.shadowColor = colors[colorIndex];
+        ctx.shadowBlur = glowIntensity * (0.5 + glowPulse * 0.5);
+
         const scale = 1 + Math.sin(frame * 0.3) * 0.2;
         ctx.translate(x, y);
         ctx.scale(scale, scale);
