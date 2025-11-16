@@ -109,6 +109,10 @@ const Player = {
     comboTimer: 0,
     maxCombo: 0,
 
+    // Sword trail effect
+    swordTrail: [],
+    maxTrailLength: 8,
+
     // Power-ups
     powerUps: {
         damageBoost: 0,
@@ -176,6 +180,7 @@ const Player = {
         this.statusEffects = [];
         this.currentCombo = 0;
         this.comboTimer = 0;
+        this.swordTrail = [];
 
         // Initialize spell progress
         this.availableSpells.forEach(spell => {
@@ -356,6 +361,9 @@ const Player = {
         if (dx !== 0 || dy !== 0) {
             this.frame++;
         }
+
+        // Update sword trail
+        this.updateSwordTrail();
 
         // Handle ARCSIS SPIN ATTACK (Space + Shift simultaneously)
         if (Input.isPressed('Space') && Input.isPressed('ShiftLeft') && this.spinCooldown <= 0 && !this.spinning) {
@@ -1166,6 +1174,9 @@ const Player = {
             ctx.restore();
         }
 
+        // Draw sword trail effect
+        this.drawSwordTrail(ctx);
+
         // Draw attack effect
         if (this.attacking) {
             Sprites.drawSlash(ctx, this.x + this.width / 2, this.y + this.height / 2, this.direction, (200 - this.attackCooldown) / 20, this.lastCritical);
@@ -1207,6 +1218,118 @@ const Player = {
         ctx.textAlign = 'center';
         const combo = Math.max(this.currentCombo, this.comboCount);
         ctx.fillText(`${combo}x COMBO!`, this.x + this.width / 2, this.y - 10);
+        ctx.restore();
+    },
+
+    updateSwordTrail: function() {
+        // Add new trail point when attacking or spinning
+        if (this.attacking || this.spinning) {
+            const centerX = this.x + this.width / 2;
+            const centerY = this.y + this.height / 2;
+
+            let trailPoint;
+            if (this.spinning) {
+                // Circular trail for spin attack
+                const spinProgress = (800 - this.spinDuration) / 800;
+                const angle = spinProgress * Math.PI * 8;
+                const radius = 40;
+                trailPoint = {
+                    x: centerX + Math.cos(angle) * radius,
+                    y: centerY + Math.sin(angle) * radius,
+                    type: 'spin',
+                    age: 0
+                };
+            } else {
+                // Directional trail for normal attacks
+                let offsetX = 0, offsetY = 0;
+                const range = 35;
+                switch (this.direction) {
+                    case 'right': offsetX = range; break;
+                    case 'left': offsetX = -range; break;
+                    case 'up': offsetY = -range; break;
+                    case 'down': offsetY = range; break;
+                }
+                trailPoint = {
+                    x: centerX + offsetX,
+                    y: centerY + offsetY,
+                    type: 'slash',
+                    age: 0
+                };
+            }
+
+            this.swordTrail.push(trailPoint);
+
+            // Limit trail length
+            if (this.swordTrail.length > this.maxTrailLength) {
+                this.swordTrail.shift();
+            }
+        }
+
+        // Age and clean up trail points
+        this.swordTrail = this.swordTrail.filter(point => {
+            point.age++;
+            return point.age < 12; // Trail fades over 12 frames
+        });
+    },
+
+    drawSwordTrail: function(ctx) {
+        if (this.swordTrail.length < 2) return;
+
+        ctx.save();
+
+        // Get trail color based on sword rarity
+        const rarityColors = {
+            'COMMON': '#C0C0C0',
+            'UNCOMMON': '#00FF00',
+            'RARE': '#0088FF',
+            'EPIC': '#9400D3',
+            'LEGENDARY': '#FFD700',
+            'MYTHIC': '#FF1493',
+            'DIVINE': '#FF0000'
+        };
+        const trailColor = rarityColors[this.equipment.swordRarity] || '#FFFFFF';
+
+        // Draw trail segments with fading effect
+        for (let i = 1; i < this.swordTrail.length; i++) {
+            const prev = this.swordTrail[i - 1];
+            const curr = this.swordTrail[i];
+
+            // Calculate opacity based on age (older = more transparent)
+            const avgAge = (prev.age + curr.age) / 2;
+            const alpha = Math.max(0, 1 - (avgAge / 12));
+
+            ctx.globalAlpha = alpha * 0.7;
+            ctx.strokeStyle = trailColor;
+            ctx.lineWidth = 4 - (avgAge / 4);
+            ctx.lineCap = 'round';
+
+            ctx.beginPath();
+            ctx.moveTo(prev.x, prev.y);
+            ctx.lineTo(curr.x, curr.y);
+            ctx.stroke();
+
+            // Add glow effect for high-level weapons
+            if (this.equipment.swordLevel >= 20) {
+                ctx.globalAlpha = alpha * 0.3;
+                ctx.lineWidth = 8 - (avgAge / 3);
+                ctx.stroke();
+            }
+        }
+
+        // Draw particles along trail for epic+ weapons
+        if (this.equipment.swordLevel >= 35 && this.swordTrail.length > 0) {
+            const lastPoint = this.swordTrail[this.swordTrail.length - 1];
+            if (lastPoint.age < 3) {
+                ctx.globalAlpha = 0.8;
+                ctx.fillStyle = '#FFFFFF';
+                for (let i = 0; i < 3; i++) {
+                    const particleX = lastPoint.x + (Math.random() - 0.5) * 20;
+                    const particleY = lastPoint.y + (Math.random() - 0.5) * 20;
+                    ctx.fillRect(particleX - 2, particleY - 2, 4, 4);
+                }
+            }
+        }
+
         ctx.restore();
     },
 
