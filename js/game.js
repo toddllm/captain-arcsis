@@ -261,6 +261,12 @@ const Game = {
             return;
         }
 
+        // Handle book display FIRST (highest priority for input)
+        if (Puzzles.bookDisplayActive) {
+            Puzzles.updateBookDisplay();
+            return; // Skip all other updates while book is displayed
+        }
+
         Player.update(deltaTime, World);
         Enemies.update(deltaTime, Player);
         Fairy.update(deltaTime, Player);
