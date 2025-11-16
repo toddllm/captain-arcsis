@@ -129,6 +129,7 @@ const Player = {
     anizonDefeats: 0,
     anizonFriends: [], // Friends unlocked from Anizon
     secretsUnlocked: [],
+    hasAnizonHeartKey: false, // Special key to unlock mom's prison cell
 
     // Skill Points and Skill Tree
     skillPoints: 0,
@@ -1062,6 +1063,12 @@ const Player = {
             this.anizonFriends.push(newFriend);
         }
 
+        // Grant the Anizon Heart Key on first defeat
+        if (!this.hasAnizonHeartKey) {
+            this.hasAnizonHeartKey = true;
+            Fairy.speak("You obtained the Anizon Heart Key! You can now free your mom!");
+        }
+
         // Drop special keys
         this.secretKeys += this.anizonDefeats;
 
@@ -1382,6 +1389,7 @@ const Player = {
             anizonDefeats: this.anizonDefeats,
             anizonFriends: [...this.anizonFriends],
             secretsUnlocked: [...this.secretsUnlocked],
+            hasAnizonHeartKey: this.hasAnizonHeartKey,
             skillPoints: this.skillPoints,
             skills: Utils.clone(this.skills),
             achievements: [...this.achievements],
