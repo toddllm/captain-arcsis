@@ -595,6 +595,30 @@ const Sprites = {
         ctx.restore();
     },
 
+    drawDustParticle: function(ctx, particle) {
+        ctx.save();
+
+        // Fade out as particle ages
+        const alpha = 1 - (particle.frame / particle.maxFrames);
+        ctx.globalAlpha = alpha * 0.6;
+
+        // Dust color - brownish gray that gets lighter as it rises
+        const brightness = 120 + (particle.frame * 3);
+        ctx.fillStyle = `rgb(${brightness}, ${brightness - 10}, ${brightness - 20})`;
+
+        // Shrink slightly as it fades
+        const currentSize = particle.size * (1 - particle.frame / particle.maxFrames * 0.3);
+
+        ctx.fillRect(
+            particle.x - currentSize / 2,
+            particle.y - currentSize / 2,
+            currentSize,
+            currentSize
+        );
+
+        ctx.restore();
+    },
+
     drawShopIcon: function(ctx, x, y) {
         ctx.save();
         ctx.translate(x, y);

@@ -360,6 +360,14 @@ const Player = {
         // Update animation frame
         if (dx !== 0 || dy !== 0) {
             this.frame++;
+
+            // Spawn footstep dust particles every few frames
+            if (this.frame % 8 === 0) {
+                Combat.addDustParticle(
+                    this.x + this.width / 2,
+                    this.y + this.height - 2
+                );
+            }
         }
 
         // Update sword trail
