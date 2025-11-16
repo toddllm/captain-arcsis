@@ -241,6 +241,138 @@ const Player = {
         });
     },
 
+    // CRITICAL: Full reset for NEW GAME - resets ALL persistent stats
+    fullReset: function(arcsisType = 'BLUE') {
+        // Reset position and basic state
+        this.x = 400;
+        this.y = 300;
+        this.direction = 'down';
+        this.frame = 0;
+
+        // Reset hearts system
+        this.hearts = 3;
+        this.maxHearts = 3;
+        this.permanentDeaths = 0;
+        this.hp = this.heartHp;
+
+        // Reset stats
+        this.attack = CONSTANTS.PLAYER_BASE_ATTACK;
+        this.defense = CONSTANTS.PLAYER_BASE_DEFENSE;
+        this.critChance = CONSTANTS.CRIT_CHANCE_BASE;
+        this.dodgeChance = 0;
+
+        // Reset level and experience
+        this.level = 1;
+        this.exp = 0;
+        this.expToNext = CONSTANTS.EXP_BASE;
+
+        // Reset equipment to defaults
+        this.equipment = {
+            swordLevel: 1,
+            swordExp: 0,
+            swordExpToNext: 50,
+            swordRarity: 'COMMON',
+            swordName: 'Rusty Blade',
+            swordKills: 0,
+            swordCombo: 0,
+            maxCombo: 0,
+            shieldLevel: 1,
+            shieldExp: 0,
+            shieldExpToNext: 50,
+            shieldRarity: 'COMMON',
+            shieldName: 'Wooden Buckler',
+            shieldBlocks: 0,
+            perfectBlocks: 0
+        };
+
+        // Reset spells
+        this.learnedSpells = ['light'];
+        this.spellProgress = {};
+        this.availableSpells.forEach(spell => {
+            this.spellProgress[spell] = 0;
+        });
+        this.selectedSpell = 0;
+
+        // Reset inventory
+        this.coins = 0;
+        this.keys = 0;
+        this.secretKeys = 0;
+        this.items = [];
+        this.potions = {
+            health: 3,
+            mana: 3,
+            mega: 0
+        };
+
+        // Reset combat state
+        this.attacking = false;
+        this.attackCooldown = 0;
+        this.invincible = false;
+        this.invincibilityTimer = 0;
+        this.hitStun = 0;
+        this.comboTimer = 0;
+        this.currentCombo = 0;
+        this.lastCritical = false;
+        this.statusEffects = [];
+        this.spinning = false;
+        this.spinCooldown = 0;
+        this.spinDuration = 0;
+        this.caughtEnemies = [];
+        this.specialAbilityCharge = 0;
+        this.specialAbilityCooldown = 0;
+        this.canUseSpecial = true;
+
+        // Reset fairy
+        this.hasFairy = false;
+        this.fairyMana = 100;
+        this.maxFairyMana = 100;
+
+        // Reset Anizon tracking - THIS WAS THE "SCAMMING" BUG!
+        this.anizonDefeats = 0;
+        this.anizonFriends = [];
+        this.secretsUnlocked = [];
+        this.hasAnizonHeartKey = false;
+
+        // Reset skills
+        this.skillPoints = 0;
+        this.skills = {
+            swordMastery: 0,
+            shieldMastery: 0,
+            criticalStrike: 0,
+            comboMaster: 0,
+            lifesteal: 0,
+            manaPool: 0,
+            spellPower: 0,
+            fastCasting: 0,
+            manaRegen: 0,
+            vitality: 0,
+            regeneration: 0,
+            dodgeRoll: 0,
+            lastStand: 0
+        };
+
+        // Reset achievements and stats
+        this.achievements = [];
+        this.totalDamageDealt = 0;
+        this.totalDamageTaken = 0;
+        this.enemiesKilled = 0;
+        this.bossesDefeated = 0;
+        this.secretsFound = 0;
+        this.maxLevelReached = 1;
+
+        // Reset quest flags
+        this.questFlags = {};
+
+        // Reset ultimates
+        this.currentUltimate = 'arcsis_storm';
+        this.unlockedUltimates = ['arcsis_storm'];
+
+        // Set arcsis type
+        this.setArcsisType(arcsisType);
+
+        console.log('[DEBUG] Player fully reset for new game');
+    },
+
     setArcsisType: function(type) {
         this.arcsisType = type;
         this.typeBonuses = CONSTANTS.ARCSIS_TYPES[type].bonuses;
