@@ -103,6 +103,11 @@ const Game = {
                 break;
 
             case 'dialogue':
+                // Allow closing book display even during dialogue
+                if (Puzzles.bookDisplayActive) {
+                    Puzzles.updateBookDisplay();
+                }
+
                 Dialogue.update(deltaTime);
                 if (!Dialogue.isActive()) {
                     this.state = 'playing';
