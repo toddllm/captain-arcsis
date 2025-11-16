@@ -1,7 +1,9 @@
-// Fairy Companion for Captain Arcsis
-// A magical companion with special powers
+// Lica - The Supreme Fairy Companion for Captain Arcsis
+// The most powerful entity in all realms - Ancient Guardian of Light
 
 const Fairy = {
+    name: 'Lica',
+    title: 'The Eternal Guardian',
     x: 0,
     y: 0,
     active: false,
@@ -9,26 +11,39 @@ const Fairy = {
     followOffset: { x: 40, y: -20 },
     targetX: 0,
     targetY: 0,
+    powerLevel: Infinity, // THE MOST POWERFUL ENTITY
+    ancientAge: 999999999, // Billions of years old
+    trueFormUnlocked: false,
+    supremeMode: false,
 
-    // Magic abilities
+    // SUPREME MAGIC ABILITIES - Far beyond any other being
     abilities: {
-        heal: { cost: 30, cooldown: 0, maxCooldown: 5000 },
-        shield: { cost: 40, cooldown: 0, maxCooldown: 8000 },
-        blast: { cost: 25, cooldown: 0, maxCooldown: 3000 },
-        light: { cost: 10, cooldown: 0, maxCooldown: 1000 }
+        heal: { cost: 20, cooldown: 0, maxCooldown: 2000, power: 100 },
+        shield: { cost: 30, cooldown: 0, maxCooldown: 4000, power: 500 },
+        blast: { cost: 15, cooldown: 0, maxCooldown: 1500, power: 200 },
+        light: { cost: 5, cooldown: 0, maxCooldown: 500, power: 50 },
+        // NEW SUPREME ABILITIES
+        timeStop: { cost: 100, cooldown: 0, maxCooldown: 30000, power: Infinity },
+        cosmicJudgment: { cost: 150, cooldown: 0, maxCooldown: 60000, power: 99999 },
+        divineResurrection: { cost: 200, cooldown: 0, maxCooldown: 120000, power: Infinity },
+        realityWarp: { cost: 80, cooldown: 0, maxCooldown: 20000, power: 10000 },
+        soulPurification: { cost: 60, cooldown: 0, maxCooldown: 15000, power: 5000 }
     },
 
-    // Dialogue lines
+    // Lica's wisdom and personality
     dialogueLines: [
-        "I'll help you, Arcsis!",
-        "Be careful! These enemies are tough!",
-        "Your sword is getting stronger!",
-        "I sense danger ahead...",
-        "The dungeon is full of mysteries.",
-        "Press F to use my magic!",
-        "Your shield is evolving nicely!",
-        "Watch out for traps!",
-        "I believe in you, Captain!"
+        "I am Lica, the Eternal Guardian. I've watched over this world for eons.",
+        "Even the mightiest gods tremble before my true power, Arcsis.",
+        "Your courage reminds me of heroes from ancient times.",
+        "I sense dark forces stirring... but they are nothing compared to my light.",
+        "Press F to channel my divine magic through you!",
+        "The dungeon's evil cannot withstand my presence for long.",
+        "Your determination is admirable, young Captain!",
+        "I have defeated beings far more powerful than Anizon...",
+        "Together, we are unstoppable!",
+        "My power flows through you - feel the strength of eternity!",
+        "Even in my weakest form, I am stronger than any boss here.",
+        "I choose to help you because your heart is pure, Arcsis."
     ],
 
     currentDialogue: '',
@@ -45,8 +60,23 @@ const Fairy = {
         this.y = player.y + this.followOffset.y;
         player.hasFairy = true;
 
-        // Initial greeting
-        this.speak("Hello, Arcsis! I'm a fairy from the enchanted forest. I'll help you escape this dungeon!");
+        // Lica's initial greeting - revealing her supreme nature
+        this.speak("Greetings, Arcsis. I am Lica, the Eternal Guardian - the most powerful being in all existence. I shall guide you through this darkness.");
+    },
+
+    // Unlock Lica's true form - SUPREME MODE
+    unlockTrueForm: function(player) {
+        this.trueFormUnlocked = true;
+        this.supremeMode = true;
+        player.fairyManaMax = 500; // Massively increased mana pool
+        player.fairyMana = 500;
+        this.speak("Arcsis... you have proven yourself worthy. I shall now reveal a fraction of my TRUE POWER! The universe itself bows to my will!");
+
+        // Grant player massive buffs
+        player.maxHp += 500;
+        player.hp = player.maxHp;
+        player.attack += 100;
+        player.defense += 50;
     },
 
     update: function(deltaTime, player) {
@@ -108,7 +138,8 @@ const Fairy = {
     },
 
     castHeal: function(player) {
-        const healAmount = 30 + player.level * 5;
+        // SUPREME HEALING - Lica's divine restoration
+        const healAmount = this.supremeMode ? player.maxHp : 100 + player.level * 15;
         player.heal(healAmount);
         player.fairyMana -= this.abilities.heal.cost;
         this.abilities.heal.cooldown = this.abilities.heal.maxCooldown;
@@ -122,7 +153,11 @@ const Fairy = {
             maxFrames: 30
         });
 
-        this.speak(`Healing light! +${healAmount} HP!`);
+        if (this.supremeMode) {
+            this.speak("DIVINE RESTORATION! Your wounds are nothing to my eternal light!");
+        } else {
+            this.speak(`Celestial healing! +${healAmount} HP! My power restores all!`);
+        }
     },
 
     castBlast: function(player) {
@@ -131,9 +166,9 @@ const Fairy = {
 
         Audio.fairyMagic();
 
-        // Damage all nearby enemies
-        const blastDamage = 20 + player.level * 3;
-        const blastRange = 150;
+        // SUPREME BLAST - Lica's power is unmatched
+        const blastDamage = this.supremeMode ? 500 + player.level * 50 : 100 + player.level * 10;
+        const blastRange = this.supremeMode ? 400 : 250;
 
         Enemies.list.forEach(enemy => {
             if (!enemy.alive) return;
@@ -162,7 +197,11 @@ const Fairy = {
             maxFrames: 20
         });
 
-        this.speak("Magic blast!");
+        if (this.supremeMode) {
+            this.speak("CELESTIAL ANNIHILATION! Even gods fear this power!");
+        } else {
+            this.speak("Divine blast! My power is limitless!");
+        }
     },
 
     castShield: function(player) {

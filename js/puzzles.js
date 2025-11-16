@@ -94,6 +94,33 @@ const Puzzles = {
         };
     },
 
+    createPrisonCell: function(x, y, id, hasMom = false) {
+        return {
+            type: 'prison_cell',
+            x: x,
+            y: y,
+            width: 64,
+            height: 48,
+            id: id,
+            hasMom: hasMom,
+            opened: false
+        };
+    },
+
+    createBook: function(x, y, id, title, contents) {
+        return {
+            type: 'book',
+            x: x,
+            y: y,
+            width: 24,
+            height: 32,
+            id: id,
+            title: title,
+            contents: contents,
+            read: false
+        };
+    },
+
     addElement: function(element) {
         this.elements.push(element);
     },
@@ -161,8 +188,16 @@ const Puzzles = {
                 const linkedElement = this.getElementById(element.linkedTo);
                 if (linkedElement && linkedElement.type === 'door') {
                     linkedElement.open = element.pulled;
+                    if (element.pulled) {
+                        Audio.puzzleSolve();
+                        this.solved[element.id] = true;
+                        Fairy.speak("The lever opened the door! Great job!");
+                    } else {
+                        Audio.buttonPress();
+                    }
+                } else {
+                    Audio.buttonPress();
                 }
-                Audio.buttonPress();
                 break;
 
             case 'door':
@@ -203,8 +238,124 @@ const Puzzles = {
                     this.solved[element.id] = true;
                 }
                 break;
+
+            case 'prison_cell':
+                if (!element.opened && element.hasMom) {
+                    if (player.hasAnizonHeartKey) {
+                        element.opened = true;
+                        Audio.puzzleSolve();
+                        this.solved[element.id] = true;
+                        Dialogue.start('mom_rescue_success');
+                        player.momRescued = true;
+                    } else {
+                        Dialogue.start('find_mom_prison');
+                        player.foundMom = true;
+                    }
+                }
+                break;
+
+            case 'book':
+                if (!element.read) {
+                    element.read = true;
+                    this.showBookContents(element);
+                    Audio.dialogueBeep();
+                    Fairy.speak(`"${element.title}" - Ancient knowledge revealed!`);
+                }
+                break;
         }
     },
+
+    // IN-GAME BOOK SYSTEM - Replaces tutorial popups!
+    showBookContents: function(book) {
+        this.currentBook = book;
+        this.bookDisplayActive = true;
+        this.bookDisplayTimer = 0;
+    },
+
+    drawBookDisplay: function(ctx) {
+        if (!this.bookDisplayActive || !this.currentBook) return;
+
+        ctx.save();
+
+        // Book background
+        const bookWidth = 600;
+        const bookHeight = 400;
+        const bookX = (CONSTANTS.CANVAS_WIDTH - bookWidth) / 2;
+        const bookY = (CONSTANTS.CANVAS_HEIGHT - bookHeight) / 2;
+
+        // Parchment background
+        ctx.fillStyle = '#F4E4BC';
+        ctx.fillRect(bookX, bookY, bookWidth, bookHeight);
+
+        // Book border (leather)
+        ctx.strokeStyle = '#8B4513';
+        ctx.lineWidth = 8;
+        ctx.strokeRect(bookX, bookY, bookWidth, bookHeight);
+
+        // Inner border (gold)
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(bookX + 15, bookY + 15, bookWidth - 30, bookHeight - 30);
+
+        // Title
+        ctx.font = 'bold 24px serif';
+        ctx.fillStyle = '#8B0000';
+        ctx.textAlign = 'center';
+        ctx.fillText(this.currentBook.title, CONSTANTS.CANVAS_WIDTH / 2, bookY + 50);
+
+        // Decorative line under title
+        ctx.strokeStyle = '#8B0000';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(bookX + 100, bookY + 60);
+        ctx.lineTo(bookX + bookWidth - 100, bookY + 60);
+        ctx.stroke();
+
+        // Book contents
+        ctx.font = '16px serif';
+        ctx.fillStyle = '#2C1810';
+        ctx.textAlign = 'left';
+
+        const maxWidth = bookWidth - 60;
+        const lineHeight = 24;
+        const words = this.currentBook.contents.split(' ');
+        let line = '';
+        let y = bookY + 100;
+
+        for (let word of words) {
+            const testLine = line + word + ' ';
+            const metrics = ctx.measureText(testLine);
+
+            if (metrics.width > maxWidth) {
+                ctx.fillText(line, bookX + 30, y);
+                line = word + ' ';
+                y += lineHeight;
+            } else {
+                line = testLine;
+            }
+        }
+        ctx.fillText(line, bookX + 30, y);
+
+        // Close instruction
+        ctx.font = '14px monospace';
+        ctx.fillStyle = '#666666';
+        ctx.textAlign = 'center';
+        ctx.fillText('Press E or SPACE to close', CONSTANTS.CANVAS_WIDTH / 2, bookY + bookHeight - 25);
+
+        ctx.restore();
+    },
+
+    updateBookDisplay: function() {
+        if (this.bookDisplayActive) {
+            if (Input.wasJustPressed('KeyE') || Input.wasJustPressed('Space')) {
+                this.bookDisplayActive = false;
+                this.currentBook = null;
+            }
+        }
+    },
+
+    bookDisplayActive: false,
+    currentBook: null,
 
     getElementById: function(id) {
         return this.elements.find(e => e.id === id);
@@ -345,6 +496,68 @@ const Puzzles = {
                 ctx.fillRect(element.x + 12, element.y + 24, 8, 4);
                 ctx.fillRect(element.x + 4, element.y + 12, 4, 8);
                 ctx.fillRect(element.x + 24, element.y + 12, 4, 8);
+                break;
+
+            case 'prison_cell':
+                // Draw prison cell
+                ctx.fillStyle = '#2C2C2C';
+                ctx.fillRect(element.x, element.y, element.width, element.height);
+
+                if (!element.opened) {
+                    // Prison bars
+                    ctx.fillStyle = '#4A4A4A';
+                    for (let i = 0; i < 8; i++) {
+                        ctx.fillRect(element.x + i * 8, element.y, 4, element.height);
+                    }
+
+                    // If mom is inside, show her silhouette
+                    if (element.hasMom) {
+                        ctx.fillStyle = '#FFB6C1';
+                        ctx.fillRect(element.x + 24, element.y + 12, 16, 28);
+                        ctx.fillStyle = '#8B4513';
+                        ctx.fillRect(element.x + 28, element.y + 8, 8, 8);
+                        // Glow effect
+                        ctx.strokeStyle = '#FF69B4';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(element.x - 2, element.y - 2, element.width + 4, element.height + 4);
+                    }
+                } else {
+                    // Open cell
+                    ctx.strokeStyle = '#4A4A4A';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(element.x, element.y, element.width, element.height);
+                }
+                break;
+
+            case 'book':
+                if (!element.read) {
+                    // Ancient book
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(element.x, element.y, element.width, element.height);
+
+                    // Book spine
+                    ctx.fillStyle = '#654321';
+                    ctx.fillRect(element.x, element.y, 4, element.height);
+
+                    // Gold decorations
+                    ctx.fillStyle = '#FFD700';
+                    ctx.fillRect(element.x + 8, element.y + 4, 12, 2);
+                    ctx.fillRect(element.x + 8, element.y + 26, 12, 2);
+                    ctx.fillRect(element.x + 10, element.y + 12, 8, 8);
+
+                    // Magical glow
+                    if (Math.sin(Date.now() * 0.005) > 0) {
+                        ctx.strokeStyle = '#FFFF00';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(element.x - 2, element.y - 2, element.width + 4, element.height + 4);
+                    }
+                } else {
+                    // Read book (faded)
+                    ctx.globalAlpha = 0.5;
+                    ctx.fillStyle = '#8B4513';
+                    ctx.fillRect(element.x, element.y, element.width, element.height);
+                    ctx.globalAlpha = 1;
+                }
                 break;
         }
 

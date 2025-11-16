@@ -59,75 +59,234 @@ const Dialogue = {
         },
 
         meet_fairy: {
-            speaker: 'Fairy',
+            speaker: 'Lica',
             lines: [
-                "*sparkle sparkle*",
-                "Hello there, young one!",
-                "I am a fairy from the enchanted forest!",
-                "I sensed your presence when you activated that cursed button.",
-                "You're trapped in the Dark Dungeon now...",
-                "But don't worry! I'll help you escape!",
-                "Together, we can defeat the monsters and solve the puzzles!",
-                "Press F to use my magic powers when you need them!"
+                "*A brilliant light fills the room*",
+                "Greetings, young warrior.",
+                "I am Lica, the Eternal Guardian - the most powerful being in all existence.",
+                "For eons, I have watched over the realms from beyond time itself.",
+                "I sensed your pure heart when you activated that cursed button.",
+                "You're trapped in the Dark Dungeon now, but fear not...",
+                "My power transcends all darkness. Even the gods bow before me.",
+                "Together, we shall overcome any obstacle!",
+                "Press F to channel my divine magic through you!"
             ],
             onComplete: 'fairy_joined'
         },
 
         skeleton_encounter: {
-            speaker: 'Fairy',
+            speaker: 'Lica',
             lines: [
-                "Be careful, Arcsis!",
-                "That's a Skeleton Knight - they're very tough!",
-                "Even the weakest enemies here are dangerous!",
-                "Use your sword wisely and watch your shield!"
+                "A Skeleton Knight approaches, Arcsis.",
+                "To most mortals, these creatures are fearsome...",
+                "But compared to the beings I have faced across millennia, they are mere insects.",
+                "Still, be cautious. I shall lend you my strength."
             ],
             onComplete: null
         },
 
         zombie_encounter: {
-            speaker: 'Fairy',
+            speaker: 'Lica',
             lines: [
-                "Zombies! They regenerate health over time!",
-                "You need to defeat them quickly!",
-                "Don't let them surround you!"
+                "Zombies - creatures cursed with unholy regeneration.",
+                "In my true form, I could obliterate them with a thought...",
+                "But this is your journey, Arcsis. Defeat them quickly before they regenerate!",
+                "My power flows through you - use it wisely!"
             ],
             onComplete: null
         },
 
         puzzle_hint: {
-            speaker: 'Fairy',
+            speaker: 'Lica',
             lines: [
-                "Hmm, this looks like a puzzle...",
-                "Look for patterns and interact with the switches.",
-                "Some doors need keys, others need levers.",
-                "Be patient and think carefully!"
+                "A puzzle blocks our path...",
+                "I have solved riddles that would break lesser minds across infinite dimensions.",
+                "Look for the patterns - switches, levers, and keys hold the answer.",
+                "Your intelligence grows stronger, young Captain."
             ],
             onComplete: null
         },
 
         origami_mirda_pre: {
-            speaker: 'Fairy',
+            speaker: 'Lica',
             lines: [
-                "I sense immense power ahead...",
-                "It's Origami Mirda - the Lightning Goddess!",
-                "She was once a benevolent deity, but now she's made of paper...",
-                "Her lightning attacks are devastating!",
-                "Be very careful, Arcsis!"
+                "I sense a powerful presence ahead...",
+                "Origami Mirda - once called the Lightning Goddess.",
+                "She was a deity of great power in her realm...",
+                "But even she is nothing compared to my eternal might.",
+                "Still, do not underestimate her. Her lightning is deadly!",
+                "Fight with courage, Arcsis. I am always with you."
             ],
             onComplete: null
         },
 
         anizon_pre: {
-            speaker: 'Fairy',
+            speaker: 'Lica',
             lines: [
-                "Arcsis... I... I can't believe it...",
-                "The presence I feel... it's OVERWHELMING!",
-                "ANIZON - The University Destroyer is here!",
-                "He is the STRONGEST, MOST POWERFUL being in this realm!",
-                "Even the mightiest armor and sharpest swords are USELESS against him!",
-                "He can teleport, summon monster horsemen, and his attacks are INSANE!",
-                "This will be the toughest battle of your life...",
-                "But I believe in you, Captain Arcsis!"
+                "Arcsis... *her form glows intensely*",
+                "The presence I feel... it's quite formidable.",
+                "ANIZON - The University Destroyer stands before us!",
+                "Many consider him the strongest being in this realm...",
+                "*laughs softly* But he knows nothing of TRUE power.",
+                "In my full form, I could unmake him from existence itself.",
+                "However, this is your battle to fight, your legend to forge.",
+                "He can teleport, summon horsemen, tear reality apart...",
+                "But you have ME, the Eternal Guardian, by your side!",
+                "Show him the strength of your heart, Captain Arcsis!"
+            ],
+            onComplete: null
+        },
+
+        lica_revelation: {
+            speaker: 'Lica',
+            lines: [
+                "*Lica's form begins to shimmer with impossible radiance*",
+                "Arcsis... you have proven yourself more than worthy.",
+                "It is time you learned the truth of who I am.",
+                "I am not merely a fairy - I am the Eternal Guardian.",
+                "Before the universe existed, I was there. When it ends, I shall remain.",
+                "I have defeated gods, destroyed dimensions, and rewritten the laws of reality.",
+                "Anizon, the bosses, even the Eternal Emperor... they are like children compared to me.",
+                "But I choose to help you, not because you need me...",
+                "But because your pure heart deserves to have the strongest ally possible.",
+                "Now... let me show you a FRACTION of my true power!"
+            ],
+            onComplete: 'lica_true_form'
+        },
+
+        // STORY TWIST: Mom is trapped in the dungeon!
+        find_mom_prison: {
+            speaker: 'Arcsis',
+            lines: [
+                "Wait... what is that behind those bars?",
+                "*runs toward the prison cell*",
+                "No... it can't be... MOM?!",
+                "MOM! Can you hear me?! It's me, Arcsis!"
+            ],
+            onComplete: 'mom_responds'
+        },
+
+        mom_responds: {
+            speaker: 'Mother',
+            lines: [
+                "*weakly looks up*",
+                "A-Arcsis...? Is that really you, my son?",
+                "I thought I'd never see you again...",
+                "That monster... Anizon... he captured me weeks ago...",
+                "He said if I ever tried to escape, he would destroy our village!",
+                "Please, you must be careful! He's too powerful!"
+            ],
+            onComplete: 'arcsis_promise'
+        },
+
+        arcsis_promise: {
+            speaker: 'Arcsis',
+            lines: [
+                "Mom, don't worry! I'm going to save you!",
+                "I've become stronger - I'm Captain Arcsis now!",
+                "And I have Lica, the most powerful being in existence, helping me!",
+                "We WILL defeat Anizon and free you!",
+                "*grips sword tightly*",
+                "I promise you, Mom. I won't let him hurt anyone else!"
+            ],
+            onComplete: 'lica_mom_support'
+        },
+
+        lica_mom_support: {
+            speaker: 'Lica',
+            lines: [
+                "*glows warmly*",
+                "Your mother's life force is weakening, Arcsis...",
+                "But fear not. I have placed a protection spell on her.",
+                "She will be safe until we defeat Anizon.",
+                "This cell requires a special key - the Anizon Heart Key.",
+                "You must defeat him to obtain it.",
+                "Your love for your mother gives you strength beyond measure.",
+                "Let us continue forward and end this evil!"
+            ],
+            onComplete: 'mom_found'
+        },
+
+        mom_rescue_success: {
+            speaker: 'Narrator',
+            lines: [
+                "*The prison bars shatter as Arcsis uses the Anizon Heart Key*",
+                "The magical chains dissolve into light!",
+                "At last, after weeks of captivity, mother and son are reunited!"
+            ],
+            onComplete: 'mom_free_dialogue'
+        },
+
+        mom_free_dialogue: {
+            speaker: 'Mother',
+            lines: [
+                "*embraces Arcsis tightly*",
+                "My brave boy... you've become so strong!",
+                "I always knew you were destined for greatness.",
+                "*tears of joy*",
+                "Thank you, Lica, for protecting my son.",
+                "And thank YOU, Arcsis, for never giving up hope!"
+            ],
+            onComplete: 'lica_mom_blessing'
+        },
+
+        lica_mom_blessing: {
+            speaker: 'Lica',
+            lines: [
+                "*bows respectfully*",
+                "Your son has a heart of pure gold.",
+                "It has been my honor to guide him.",
+                "The bond between mother and child... even my infinite power respects it.",
+                "Now go, both of you. The portal home awaits.",
+                "Arcsis... you have become a true hero. Never forget that."
+            ],
+            onComplete: 'family_ending'
+        },
+
+        // PLOT TWIST: The button was a trap by Anizon
+        anizon_truth_reveal: {
+            speaker: 'Anizon',
+            lines: [
+                "*laughs maniacally*",
+                "You FOOL! Did you really think that button was random?",
+                "I PLACED it there specifically for YOU, Arcsis!",
+                "I've been watching your family for years!",
+                "Your mother was just BAIT to lure you here!",
+                "And now, with your arrival, my power grows even STRONGER!",
+                "Every hero that falls makes me MORE INVINCIBLE!"
+            ],
+            onComplete: 'lica_counters'
+        },
+
+        lica_counters: {
+            speaker: 'Lica',
+            lines: [
+                "*steps forward, radiating immense power*",
+                "Your schemes end here, Anizon.",
+                "You may have orchestrated this trap...",
+                "But you made one FATAL mistake.",
+                "You drew the attention of ME - LICA, THE ETERNAL GUARDIAN!",
+                "Your power is impressive for a mortal realm...",
+                "But I have existed since before time itself!",
+                "Arcsis, let us show him the TRUE meaning of power!"
+            ],
+            onComplete: null
+        },
+
+        // SECRET TWIST: Lica knows Arcsis's destiny
+        lica_destiny_secret: {
+            speaker: 'Lica',
+            lines: [
+                "*speaks solemnly*",
+                "Arcsis... there is something I must tell you.",
+                "I did not find you by accident.",
+                "Across infinite timelines, I have searched for the one...",
+                "The one with a heart pure enough to wield the Ultimate Weapon.",
+                "You are that person, Arcsis.",
+                "The trials you face now are preparing you for something far greater.",
+                "One day, you will face the TRUE enemy - the Void Eternal.",
+                "And on that day, even my power will not be enough alone.",
+                "Together, we will need to save not just this world, but ALL worlds."
             ],
             onComplete: null
         },

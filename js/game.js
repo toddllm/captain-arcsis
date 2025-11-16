@@ -261,6 +261,7 @@ const Game = {
         Fairy.update(deltaTime, Player);
         Bosses.update(deltaTime, Player);
         Puzzles.update(Player);
+        Puzzles.updateBookDisplay(); // Handle in-game book reading
         Combat.update(deltaTime);
 
         Enemies.checkCollisions(Player);
@@ -810,6 +811,9 @@ const Game = {
         // Draw low health warning effect when on last heart
         const isLowHealth = Player.hearts <= 1 && Player.hp < Player.heartHp * 0.5;
         LowHealthWarning.draw(ctx, CONSTANTS.CANVAS_WIDTH, CONSTANTS.CANVAS_HEIGHT, isLowHealth);
+
+        // Draw in-game book display (tutorial/lore books)
+        Puzzles.drawBookDisplay(ctx);
 
         if (this.state === 'dialogue') {
             Dialogue.draw(ctx);

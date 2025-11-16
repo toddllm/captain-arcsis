@@ -9,7 +9,7 @@ const World = {
     transitions: [],
 
     areas: {
-        // Starting area - Forest (before the button)
+        // Starting area - Forest (before the button) - NOW WITH MONSTERS!
         forest: {
             name: 'Enchanted Forest',
             width: 25,
@@ -50,7 +50,24 @@ const World = {
             },
             spawnPlayer: { x: 100, y: 300 },
             button: { x: 400, y: 280 },
-            enemies: []
+            // NOW WITH FOREST MONSTERS!
+            enemies: [
+                { type: 'forest_wolf', x: 550, y: 200 },
+                { type: 'forest_wolf', x: 300, y: 400 },
+                { type: 'corrupted_sprite', x: 650, y: 350 },
+                { type: 'wild_boar', x: 200, y: 150 }
+            ],
+            // Tutorial book in forest
+            puzzleElements: [
+                {
+                    type: 'book',
+                    x: 180,
+                    y: 350,
+                    id: 'forest_guide',
+                    title: 'A Traveler\'s Warning',
+                    contents: 'BEWARE! This forest is no longer safe. Corrupted creatures roam these woods. I have left this note for any who follow. Use WASD to move carefully. That mysterious red button ahead... DO NOT PRESS IT! It is a trap set by the evil Anizon! If you must explore, prepare yourself for battle. May Lica, the Eternal Guardian, watch over you.'
+                }
+            ]
         },
 
         // Dungeon levels
@@ -106,7 +123,24 @@ const World = {
             puzzleElements: [
                 { type: 'chest', x: 700, y: 100, id: 'd1_chest1', contents: { type: 'coins', amount: 30 } },
                 { type: 'key', x: 400, y: 450, id: 'd1_key1' },
-                { type: 'door', x: 750, y: 250, id: 'd1_exit', requiresKey: true }
+                { type: 'door', x: 750, y: 250, id: 'd1_exit', requiresKey: true },
+                // IN-GAME BOOKS - Tutorial information!
+                {
+                    type: 'book',
+                    x: 150,
+                    y: 100,
+                    id: 'combat_guide',
+                    title: 'The Warrior\'s Combat Manual',
+                    contents: 'Welcome, brave adventurer! To survive in these dark dungeons, you must master combat. Press SPACE or click to swing your sword. Hold SHIFT and press SPACE for a devastating SPIN ATTACK that pulls enemies toward you! Press Q to perform a quick DASH with invincibility frames. When your hearts are full, press R for your SPECIAL ABILITY - a powerful nova attack! Remember: even the weakest enemies here are dangerous. Fight wisely!'
+                },
+                {
+                    type: 'book',
+                    x: 550,
+                    y: 380,
+                    id: 'puzzle_guide',
+                    title: 'Ancient Puzzle Lore',
+                    contents: 'These dungeons are filled with ancient mechanisms. Press E to interact with objects around you. Levers toggle doors open and closed. Switches activate once and stay on. Keys are found throughout - collect them to unlock barred doors. Pressure plates activate when stepped upon. Look for glowing books like this one to learn more secrets. The way forward always requires careful observation!'
+                }
             ],
             fairySpawn: { x: 150, y: 200 },
             nextArea: 'dungeon_2'
@@ -549,6 +583,262 @@ const World = {
             enemies: [],
             boss: 'eternal_emperor',
             isFinalBoss: true
+        },
+
+        // MOM'S PRISON - Special story area!
+        mom_prison: {
+            name: 'Anizon\'s Prison - The Cage of Despair',
+            width: 50, // MUCH BIGGER!
+            height: 36, // GINORMOUS MAZE
+            music: 'dungeon',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+
+                // Create massive dungeon floor
+                for (let y = 0; y < 36; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 50; x++) {
+                        if (y === 0 || y === 35 || x === 0 || x === 49) {
+                            row.push('wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+
+                // Create MASSIVE MAZE structure
+                const mazeWalls = [
+                    // Outer maze ring
+                    [5, 5], [5, 6], [5, 7], [5, 8], [5, 9], [5, 10], [5, 11], [5, 12],
+                    [5, 18], [5, 19], [5, 20], [5, 21], [5, 22], [5, 23], [5, 24],
+                    [10, 5], [11, 5], [12, 5], [13, 5], [14, 5],
+                    [20, 5], [21, 5], [22, 5], [23, 5], [24, 5], [25, 5],
+                    [30, 5], [31, 5], [32, 5], [33, 5], [34, 5],
+                    [40, 5], [41, 5], [42, 5], [43, 5], [44, 5],
+                    // Inner corridors
+                    [10, 10], [10, 11], [10, 12], [10, 13], [10, 14], [10, 15],
+                    [15, 8], [15, 9], [15, 10], [15, 11], [15, 12],
+                    [20, 10], [20, 11], [20, 12], [20, 13], [20, 14], [20, 15], [20, 16],
+                    [25, 12], [25, 13], [25, 14], [25, 15], [25, 16], [25, 17], [25, 18],
+                    [30, 10], [30, 11], [30, 12], [30, 13], [30, 14],
+                    [35, 8], [35, 9], [35, 10], [35, 11], [35, 12], [35, 13],
+                    [40, 12], [40, 13], [40, 14], [40, 15], [40, 16],
+                    // Horizontal barriers
+                    [12, 20], [13, 20], [14, 20], [15, 20], [16, 20], [17, 20],
+                    [22, 22], [23, 22], [24, 22], [25, 22], [26, 22], [27, 22],
+                    [32, 18], [33, 18], [34, 18], [35, 18], [36, 18], [37, 18],
+                    // Dead ends and traps
+                    [8, 28], [8, 29], [8, 30], [9, 30], [10, 30],
+                    [18, 26], [18, 27], [18, 28], [19, 28], [20, 28],
+                    [28, 25], [28, 26], [28, 27], [29, 27], [30, 27],
+                    [38, 28], [38, 29], [38, 30], [39, 30], [40, 30],
+                    // Central prison area walls
+                    [22, 14], [23, 14], [24, 14], [26, 14], [27, 14], [28, 14],
+                    [22, 15], [28, 15],
+                    [22, 16], [28, 16],
+                    [22, 17], [23, 17], [24, 17], [26, 17], [27, 17], [28, 17]
+                ];
+
+                mazeWalls.forEach(([wx, wy]) => {
+                    if (wx > 0 && wx < 49 && wy > 0 && wy < 35) {
+                        map[wy][wx] = 'wall';
+                        collisions[wy][wx] = 1;
+                    }
+                });
+
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 64, y: 100 },
+            enemies: [
+                { type: 'skeleton_knight', x: 300, y: 200 },
+                { type: 'skeleton_knight', x: 600, y: 350 },
+                { type: 'armored_golem', x: 450, y: 500 },
+                { type: 'ghost_warrior', x: 900, y: 400 },
+                { type: 'ghost_warrior', x: 1200, y: 300 },
+                { type: 'zombie', x: 800, y: 600 },
+                { type: 'zombie', x: 1000, y: 700 }
+            ],
+            puzzleElements: [
+                { type: 'prison_cell', x: 800, y: 480, id: 'mom_cell', hasMom: true },
+                { type: 'chest', x: 1400, y: 200, id: 'prison_chest1', contents: { type: 'exp', amount: 500 } },
+                { type: 'chest', x: 200, y: 900, id: 'prison_chest2', contents: { type: 'coins', amount: 200 } },
+                { type: 'key', x: 1100, y: 800, id: 'prison_key' },
+                { type: 'lever', x: 400, y: 700, id: 'prison_lever', linkedTo: 'prison_gate' },
+                { type: 'door', x: 750, y: 400, id: 'prison_gate' }
+            ],
+            nextArea: 'dungeon_boss',
+            hasMomPrison: true
+        },
+
+        // UNDERGROUND LABYRINTH - Massive maze system!
+        underground_labyrinth_1: {
+            name: 'Underground Labyrinth - Entrance',
+            width: 60, // EVEN BIGGER!
+            height: 45, // GINORMOUS!
+            music: 'dungeon',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+
+                // Create massive labyrinth
+                for (let y = 0; y < 45; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 60; x++) {
+                        if (y === 0 || y === 44 || x === 0 || x === 59) {
+                            row.push('wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+
+                // Generate PROCEDURAL MAZE using recursive backtracking
+                const visited = {};
+                const stack = [[2, 2]];
+                visited['2,2'] = true;
+
+                // Create grid of walls first
+                for (let y = 1; y < 44; y += 2) {
+                    for (let x = 1; x < 59; x += 2) {
+                        map[y][x] = 'floor';
+                        collisions[y][x] = 0;
+                        if (y + 1 < 44) {
+                            map[y + 1][x] = 'wall';
+                            collisions[y + 1][x] = 1;
+                        }
+                        if (x + 1 < 59) {
+                            map[y][x + 1] = 'wall';
+                            collisions[y][x + 1] = 1;
+                        }
+                    }
+                }
+
+                // Carve passages
+                while (stack.length > 0) {
+                    const [cx, cy] = stack[stack.length - 1];
+                    const neighbors = [];
+
+                    const dirs = [[0, -2], [0, 2], [-2, 0], [2, 0]];
+                    for (let [dx, dy] of dirs) {
+                        const nx = cx + dx;
+                        const ny = cy + dy;
+                        if (nx > 0 && nx < 59 && ny > 0 && ny < 44 && !visited[`${nx},${ny}`]) {
+                            neighbors.push([nx, ny, dx / 2, dy / 2]);
+                        }
+                    }
+
+                    if (neighbors.length > 0) {
+                        const [nx, ny, wx, wy] = neighbors[Math.floor(Math.random() * neighbors.length)];
+                        map[cy + wy][cx + wx] = 'floor';
+                        collisions[cy + wy][cx + wx] = 0;
+                        visited[`${nx},${ny}`] = true;
+                        stack.push([nx, ny]);
+                    } else {
+                        stack.pop();
+                    }
+                }
+
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 100, y: 100 },
+            enemies: [
+                { type: 'shadow_assassin', x: 500, y: 400 },
+                { type: 'shadow_assassin', x: 800, y: 600 },
+                { type: 'void_wraith', x: 1200, y: 300 },
+                { type: 'nightmare_beast', x: 1500, y: 900 },
+                { type: 'ghost_warrior', x: 400, y: 1000 },
+                { type: 'armored_golem', x: 1000, y: 1100 }
+            ],
+            puzzleElements: [
+                { type: 'chest', x: 1800, y: 200, id: 'lab1_chest1', contents: { type: 'coins', amount: 300 } },
+                { type: 'chest', x: 300, y: 1200, id: 'lab1_chest2', contents: { type: 'health', amount: 200 } },
+                { type: 'key', x: 1600, y: 1000, id: 'lab1_key' },
+                { type: 'door', x: 1850, y: 1350, id: 'lab1_exit', requiresKey: true }
+            ],
+            nextArea: 'underground_labyrinth_2'
+        },
+
+        // DEEP UNDERGROUND - Multiple levels!
+        underground_labyrinth_2: {
+            name: 'Underground Labyrinth - Deep Caverns',
+            width: 70, // MASSIVE!
+            height: 50, // INCREDIBLY LARGE!
+            music: 'shadow',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+
+                for (let y = 0; y < 50; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 70; x++) {
+                        if (y === 0 || y === 49 || x === 0 || x === 69) {
+                            row.push('shadow_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('shadow_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+
+                // Create complex maze with multiple paths
+                for (let i = 0; i < 200; i++) {
+                    const wx = Utils.random(5, 64);
+                    const wy = Utils.random(5, 44);
+                    const length = Utils.random(3, 12);
+                    const horizontal = Math.random() > 0.5;
+
+                    for (let j = 0; j < length; j++) {
+                        const nx = horizontal ? wx + j : wx;
+                        const ny = horizontal ? wy : wy + j;
+                        if (nx >= 1 && nx < 69 && ny >= 1 && ny < 49) {
+                            map[ny][nx] = 'shadow_wall';
+                            collisions[ny][nx] = 1;
+                        }
+                    }
+                }
+
+                // Ensure path from start to exit
+                for (let x = 2; x < 68; x++) {
+                    map[25][x] = 'shadow_floor';
+                    collisions[25][x] = 0;
+                }
+
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 100, y: 800 },
+            enemies: [
+                { type: 'nightmare_beast', x: 600, y: 600 },
+                { type: 'nightmare_beast', x: 1400, y: 800 },
+                { type: 'void_wraith', x: 900, y: 400 },
+                { type: 'void_wraith', x: 1800, y: 500 },
+                { type: 'shadow_assassin', x: 400, y: 1200 },
+                { type: 'shadow_assassin', x: 1600, y: 1000 },
+                { type: 'sky_dragon', x: 1100, y: 700 }
+            ],
+            puzzleElements: [
+                { type: 'switch', x: 500, y: 200, id: 'lab2_switch1', linkedTo: 'lab2_gate1' },
+                { type: 'door', x: 1000, y: 300, id: 'lab2_gate1' },
+                { type: 'lever', x: 1500, y: 400, id: 'lab2_lever', linkedTo: 'lab2_exit' },
+                { type: 'door', x: 2100, y: 1450, id: 'lab2_exit' },
+                { type: 'chest', x: 2000, y: 200, id: 'lab2_chest', contents: { type: 'exp', amount: 1500 } }
+            ],
+            boss: 'shadow_king',
+            nextArea: 'sky_citadel_1'
         }
     },
 
@@ -696,6 +986,12 @@ const World = {
                         break;
                     case 'pressure_plate':
                         puzzleElem = Puzzles.createPressurePlate(elem.x, elem.y, elem.id, elem.linkedTo);
+                        break;
+                    case 'prison_cell':
+                        puzzleElem = Puzzles.createPrisonCell(elem.x, elem.y, elem.id, elem.hasMom);
+                        break;
+                    case 'book':
+                        puzzleElem = Puzzles.createBook(elem.x, elem.y, elem.id, elem.title, elem.contents);
                         break;
                 }
                 if (puzzleElem) {
