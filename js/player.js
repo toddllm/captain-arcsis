@@ -599,11 +599,16 @@ const Player = {
         this.invincibilityTimer = CONSTANTS.INVINCIBILITY_FRAMES;
         this.hitStun = CONSTANTS.HIT_STUN_DURATION;
 
+        // Screen shake on damage
+        ScreenShake.medium();
+
         // Check if heart is lost
         if (this.hp <= 0 && this.hearts > 1) {
             this.hearts--;
             this.hp = this.heartHp; // Refill HP for next heart
             Audio.heartLost();
+            // Extra shake when losing a heart
+            ScreenShake.heavy();
 
             // Lose special ability when not at full hearts
             this.canUseSpecial = false;

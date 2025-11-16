@@ -657,6 +657,7 @@ class Boss {
                     damage: this.attack * 1.5
                 });
                 player.takeDamage(this.attack * 1.5);
+                ScreenShake.boss();
                 break;
 
             case 'teleport_strike':
@@ -712,6 +713,7 @@ class Boss {
                 });
                 setTimeout(() => {
                     player.takeDamage(this.attack * 3);
+                    ScreenShake.boss();
                 }, 500);
                 break;
 
@@ -731,6 +733,7 @@ class Boss {
                         const dist = Utils.distance(player.x, player.y, meteorX, meteorY);
                         if (dist < 80) {
                             player.takeDamage(this.attack * 2);
+                            ScreenShake.heavy();
                         }
                     }, i * 200);
                 }

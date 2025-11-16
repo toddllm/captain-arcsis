@@ -1079,6 +1079,13 @@ const Enemies = {
                             actualDamage
                         );
 
+                        // Screen shake on hit - stronger for criticals
+                        if (player.lastCritical) {
+                            ScreenShake.critical();
+                        } else {
+                            ScreenShake.light();
+                        }
+
                         player.addCombo(); // Add to combo on hit
 
                         if (!enemy.alive) {
