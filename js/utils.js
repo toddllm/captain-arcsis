@@ -343,3 +343,63 @@ const ScreenShake = {
         this.offsetY = 0;
     }
 };
+
+// Low Health Warning Effect System
+const LowHealthWarning = {
+    pulseTime: 0,
+    pulseSpeed: 0.003, // Pulse frequency
+    maxOpacity: 0.4,
+    minOpacity: 0.1,
+
+    // Update pulse animation
+    update: function(deltaTime) {
+        this.pulseTime += deltaTime * this.pulseSpeed;
+        if (this.pulseTime > Math.PI * 2) {
+            this.pulseTime -= Math.PI * 2;
+        }
+    },
+
+    // Draw the warning vignette effect
+    draw: function(ctx, canvasWidth, canvasHeight, isLowHealth) {
+        if (!isLowHealth) return;
+
+        // Calculate pulse intensity using sine wave
+        const pulse = (Math.sin(this.pulseTime) + 1) / 2; // 0 to 1
+        const opacity = this.minOpacity + (this.maxOpacity - this.minOpacity) * pulse;
+
+        // Create radial gradient for vignette effect
+        const centerX = canvasWidth / 2;
+        const centerY = canvasHeight / 2;
+        const innerRadius = Math.min(canvasWidth, canvasHeight) * 0.3;
+        const outerRadius = Math.max(canvasWidth, canvasHeight) * 0.8;
+
+        const gradient = ctx.createRadialGradient(
+            centerX, centerY, innerRadius,
+            centerX, centerY, outerRadius
+        );
+        gradient.addColorStop(0, 'rgba(255, 0, 0, 0)');
+        gradient.addColorStop(0.5, `rgba(255, 0, 0, ${opacity * 0.3})`);
+        gradient.addColorStop(1, `rgba(139, 0, 0, ${opacity})`);
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+        // Add pulsing border for extra urgency
+        ctx.strokeStyle = `rgba(255, 0, 0, ${opacity * 0.8})`;
+        ctx.lineWidth = 4 + pulse * 4;
+        ctx.strokeRect(2, 2, canvasWidth - 4, canvasHeight - 4);
+
+        // Add heartbeat text indicator when critically low
+        if (pulse > 0.8) {
+            ctx.fillStyle = `rgba(255, 0, 0, ${opacity})`;
+            ctx.font = 'bold 14px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('! LOW HEALTH !', canvasWidth / 2, canvasHeight - 40);
+        }
+    },
+
+    // Reset the effect
+    reset: function() {
+        this.pulseTime = 0;
+    }
+};

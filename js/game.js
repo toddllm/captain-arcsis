@@ -74,6 +74,9 @@ const Game = {
         // Update screen shake effect
         ScreenShake.update(deltaTime);
 
+        // Update low health warning effect
+        LowHealthWarning.update(deltaTime);
+
         switch (this.state) {
             case 'menu':
                 this.updateMenu();
@@ -803,6 +806,10 @@ const Game = {
         Combat.draw(ctx);
 
         this.renderUI();
+
+        // Draw low health warning effect when on last heart
+        const isLowHealth = Player.hearts <= 1 && Player.hp < Player.heartHp * 0.5;
+        LowHealthWarning.draw(ctx, CONSTANTS.CANVAS_WIDTH, CONSTANTS.CANVAS_HEIGHT, isLowHealth);
 
         if (this.state === 'dialogue') {
             Dialogue.draw(ctx);
