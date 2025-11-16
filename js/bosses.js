@@ -1,9 +1,10 @@
-// Boss System for Captain Arcsis
-// Epic boss battles with dialogue and special attacks
+// Boss System for Captain Arcsis - ENHANCED EDITION
+// ANIZON: Recurring boss with progressive difficulty, friends, keys, and secrets!
 
 class Boss {
-    constructor(type) {
+    constructor(type, encounterNumber = 1) {
         this.type = type;
+        this.encounterNumber = encounterNumber; // How many times we've fought this boss
         this.active = false;
         this.frame = 0;
         this.phase = 1;
@@ -14,33 +15,62 @@ class Boss {
         this.dialogueTimer = 0;
         this.defeated = false;
 
+        // Anizon special features
+        this.friends = [];
+        this.secretKeys = [];
+        this.unlockedSecrets = [];
+
         this.setBossStats();
     }
 
     setBossStats() {
         switch (this.type) {
             case 'anizon':
-                // THE UNIVERSITY DESTROYER - FINAL BOSS
-                // The strongest, coolest, most powerful boss in the entire game!
-                this.name = 'ANIZON - The University Destroyer';
+                // THE UNIVERSITY DESTROYER - RECURRING BOSS WITH INFINITE SCALING!
+                this.name = `ANIZON - The University Destroyer (Encounter ${this.encounterNumber})`;
                 this.x = 400;
                 this.y = 100;
                 this.width = 80;
                 this.height = 96;
-                this.maxHp = 5000; // MASSIVE HP
-                this.hp = 5000;
-                this.attack = 100; // Devastating damage
-                this.defense = 50; // Even strongest armor can't scratch him
-                this.phase = 1;
-                this.maxPhases = 3;
 
-                // Special abilities
+                // PROGRESSIVE SCALING - Gets MUCH harder each time!
+                const scaling = CONSTANTS.ANIZON_SCALING;
+                const encounterMultiplier = Math.pow(scaling.HP_MULTIPLIER, this.encounterNumber - 1);
+
+                this.maxHp = Math.floor((scaling.HP_BASE + (scaling.HP_PER_ENCOUNTER * this.encounterNumber)) * encounterMultiplier);
+                this.hp = this.maxHp;
+                this.attack = scaling.ATTACK_BASE + (scaling.ATTACK_PER_ENCOUNTER * this.encounterNumber);
+                this.defense = scaling.DEFENSE_BASE + (scaling.DEFENSE_PER_ENCOUNTER * this.encounterNumber);
+
+                this.phase = 1;
+                this.maxPhases = 3 + Math.floor(this.encounterNumber / 3); // More phases as you fight more
+
+                // Special abilities scale with encounters
                 this.canTeleport = true;
                 this.teleportCooldown = 0;
                 this.summonCooldown = 0;
                 this.summonedHorsemen = [];
+                this.friendsToSummon = Math.min(this.encounterNumber, 5);
 
-                // Insane attack patterns
+                // Anizon holds keys for secrets!
+                this.keyDrops = this.encounterNumber;
+                this.secretDoorToUnlock = `secret_${this.encounterNumber}`;
+
+                // Friends that Anizon can unlock
+                this.potentialFriends = [
+                    'Shadow Warrior',
+                    'Ghost Knight',
+                    'Dark Mage',
+                    'Void Walker',
+                    'Death Knight',
+                    'Chaos Lord',
+                    'Soul Reaper',
+                    'Doom Bringer',
+                    'Apocalypse Rider',
+                    'Universe Ender'
+                ];
+
+                // Insane attack patterns - MORE AS ENCOUNTERS INCREASE
                 this.attacks = [
                     'devastation_beam',
                     'teleport_strike',
@@ -50,18 +80,24 @@ class Boss {
                     'death_spiral'
                 ];
 
-                this.introDialogue = [
-                    "...",
-                    "So... you've made it this far.",
-                    "I am ANIZON, The University Destroyer!",
-                    "Your pathetic weapons cannot harm me!",
-                    "Even the strongest armor is NOTHING before my power!",
-                    "PREPARE TO BE ERASED FROM EXISTENCE!"
-                ];
+                // Add new attacks based on encounter number
+                if (this.encounterNumber >= 2) {
+                    this.attacks.push('meteor_storm');
+                }
+                if (this.encounterNumber >= 3) {
+                    this.attacks.push('time_freeze');
+                }
+                if (this.encounterNumber >= 4) {
+                    this.attacks.push('dimension_collapse');
+                }
+                if (this.encounterNumber >= 5) {
+                    this.attacks.push('ultimate_destruction');
+                }
+
+                this.generateIntroDialogue();
                 break;
 
             case 'origami_mirda':
-                // ORIGAMI MIRDA - Lightning Goddess made of paper
                 this.name = 'ORIGAMI MIRDA - Lightning Goddess';
                 this.x = 400;
                 this.y = 150;
@@ -106,6 +142,45 @@ class Boss {
         }
     }
 
+    generateIntroDialogue() {
+        if (this.encounterNumber === 1) {
+            this.introDialogue = [
+                "...",
+                "So... you've made it this far.",
+                "I am ANIZON, The University Destroyer!",
+                "Your pathetic weapons cannot harm me!",
+                "Even the strongest armor is NOTHING before my power!",
+                "PREPARE TO BE ERASED FROM EXISTENCE!"
+            ];
+        } else if (this.encounterNumber === 2) {
+            this.introDialogue = [
+                "YOU AGAIN?!",
+                "I underestimated you last time...",
+                "But I've grown STRONGER!",
+                `My HP is now ${Utils.formatNumber(this.maxHp)}!`,
+                "You stand NO CHANCE this time!",
+                "PREPARE FOR YOUR DOOM!"
+            ];
+        } else if (this.encounterNumber === 3) {
+            this.introDialogue = [
+                "IMPOSSIBLE! How do you keep finding me?!",
+                "Fine... I'll show you my TRUE power!",
+                `${Utils.formatNumber(this.maxHp)} HP, ${this.attack} Attack!`,
+                "I've unlocked new abilities!",
+                "This time, YOU WILL FALL!"
+            ];
+        } else if (this.encounterNumber >= 4) {
+            this.introDialogue = [
+                `ENCOUNTER ${this.encounterNumber}...`,
+                "You... you are worthy...",
+                `I have become GOD-LIKE! ${Utils.formatNumber(this.maxHp)} HP!`,
+                "My power transcends reality itself!",
+                "WITNESS THE ULTIMATE DESTROYER!",
+                "EVEN THE UNIVERSE TREMBLES BEFORE ME!"
+            ];
+        }
+    }
+
     activate() {
         this.active = true;
         this.dialogueQueue = [...this.introDialogue];
@@ -127,7 +202,7 @@ class Boss {
             } else {
                 this.dialogueTimer -= deltaTime;
             }
-            return; // Don't attack during dialogue
+            return;
         }
 
         this.currentDialogue = '';
@@ -137,17 +212,7 @@ class Boss {
 
         // Phase transitions
         const hpPercent = this.hp / this.maxHp;
-        if (this.type === 'anizon') {
-            if (hpPercent <= 0.3 && this.phase < 3) {
-                this.enterPhase(3);
-            } else if (hpPercent <= 0.6 && this.phase < 2) {
-                this.enterPhase(2);
-            }
-        } else if (this.type === 'origami_mirda') {
-            if (hpPercent <= 0.5 && this.phase < 2) {
-                this.enterPhase(2);
-            }
-        }
+        this.checkPhaseTransition(hpPercent);
 
         // Execute attacks based on type
         if (this.type === 'anizon') {
@@ -163,27 +228,44 @@ class Boss {
         }
     }
 
+    checkPhaseTransition(hpPercent) {
+        if (this.type === 'anizon') {
+            const phasesThresholds = [];
+            for (let i = 1; i < this.maxPhases; i++) {
+                phasesThresholds.push(1 - (i / this.maxPhases));
+            }
+
+            for (let i = phasesThresholds.length - 1; i >= 0; i--) {
+                if (hpPercent <= phasesThresholds[i] && this.phase < i + 2) {
+                    this.enterPhase(i + 2);
+                    break;
+                }
+            }
+        } else if (this.type === 'origami_mirda') {
+            if (hpPercent <= 0.5 && this.phase < 2) {
+                this.enterPhase(2);
+            }
+        }
+    }
+
     enterPhase(newPhase) {
         this.phase = newPhase;
         this.attackTimer = 0;
 
         if (this.type === 'anizon') {
-            if (newPhase === 2) {
-                this.dialogueQueue = [
-                    "You think you can defeat me?!",
-                    "I'll show you TRUE POWER!",
-                    "PHASE TWO ACTIVATED!"
-                ];
-                this.attack *= 1.3;
-            } else if (newPhase === 3) {
-                this.dialogueQueue = [
-                    "IMPOSSIBLE!",
-                    "NO ONE HAS EVER PUSHED ME THIS FAR!",
-                    "NOW WITNESS MY ULTIMATE FORM!",
-                    "THE UNIVERSITY SHALL BE DESTROYED!"
-                ];
-                this.attack *= 1.5;
-                this.defense *= 0.7; // More aggressive, less defensive
+            const attackMultiplier = 1 + (newPhase * 0.2);
+            this.attack = (CONSTANTS.ANIZON_SCALING.ATTACK_BASE + (CONSTANTS.ANIZON_SCALING.ATTACK_PER_ENCOUNTER * this.encounterNumber)) * attackMultiplier;
+
+            this.dialogueQueue = [
+                `PHASE ${newPhase} ACTIVATED!`,
+                `You dare push me to Phase ${newPhase}?!`,
+                "My power increases EXPONENTIALLY!",
+                `Attack power: ${Math.floor(this.attack)}!`
+            ];
+
+            // Summon friends in higher phases
+            if (newPhase >= 3 && this.friendsToSummon > 0) {
+                this.summonFriends();
             }
         } else if (this.type === 'origami_mirda') {
             if (newPhase === 2) {
@@ -198,8 +280,9 @@ class Boss {
 
     updateAnizon(deltaTime, player) {
         // Teleport ability
+        const teleportChance = 0.02 * this.phase * (1 + this.encounterNumber * 0.1);
         if (this.canTeleport && this.teleportCooldown <= 0) {
-            if (Math.random() < 0.02 * this.phase) {
+            if (Math.random() < teleportChance) {
                 this.teleport();
                 this.teleportCooldown = 3000 / this.phase;
             }
@@ -209,7 +292,7 @@ class Boss {
 
         // Summon Monster Horsemen
         if (this.summonCooldown <= 0 && this.phase >= 2) {
-            if (Math.random() < 0.01) {
+            if (Math.random() < 0.01 * this.encounterNumber) {
                 this.summonHorsemen();
                 this.summonCooldown = 8000 / this.phase;
             }
@@ -217,8 +300,9 @@ class Boss {
             this.summonCooldown -= deltaTime;
         }
 
-        // Attack patterns
-        if (this.attackTimer >= 2000 / this.phase) {
+        // Attack patterns - faster with more encounters
+        const attackSpeed = 2000 / (this.phase * (1 + this.encounterNumber * 0.2));
+        if (this.attackTimer >= attackSpeed) {
             this.performAnizonAttack(player);
             this.attackTimer = 0;
         }
@@ -227,7 +311,6 @@ class Boss {
     teleport() {
         Audio.teleport();
 
-        // Teleport to random position
         const oldX = this.x;
         const oldY = this.y;
 
@@ -251,9 +334,27 @@ class Boss {
         });
     }
 
+    summonFriends() {
+        // Summon Anizon's friends
+        const friendName = this.potentialFriends[Math.min(this.encounterNumber - 1, this.potentialFriends.length - 1)];
+
+        this.dialogueQueue.push(`ARISE, MY FRIEND: ${friendName}!`);
+
+        const friend = new Enemy(this.x + Utils.random(-100, 100), this.y + 150, 'ghost_warrior');
+        friend.name = friendName;
+        friend.maxHp = 200 * this.encounterNumber;
+        friend.hp = friend.maxHp;
+        friend.attack = 50 + (this.encounterNumber * 10);
+        friend.defense = 20 + (this.encounterNumber * 5);
+        friend.isFriend = true;
+
+        Enemies.list.push(friend);
+        this.friends.push(friend);
+        this.friendsToSummon--;
+    }
+
     summonHorsemen() {
-        // Summon Monster Horsemen around Anizon
-        const numHorsemen = this.phase + 1;
+        const numHorsemen = this.phase + this.encounterNumber;
 
         for (let i = 0; i < numHorsemen; i++) {
             const angle = (i / numHorsemen) * Math.PI * 2;
@@ -261,9 +362,9 @@ class Boss {
             const y = this.y + Math.sin(angle) * 100;
 
             const horseman = new Enemy(x, y, 'ghost_warrior');
-            horseman.maxHp = 80;
-            horseman.hp = 80;
-            horseman.attack = 35;
+            horseman.maxHp = 80 + (this.encounterNumber * 20);
+            horseman.hp = horseman.maxHp;
+            horseman.attack = 35 + (this.encounterNumber * 10);
             this.summonedHorsemen.push(horseman);
             Enemies.list.push(horseman);
         }
@@ -278,11 +379,10 @@ class Boss {
     }
 
     performAnizonAttack(player) {
-        const attackType = this.attacks[Utils.random(0, Math.min(this.phase + 2, this.attacks.length - 1))];
+        const attackType = this.attacks[Utils.random(0, Math.min(this.phase + this.encounterNumber, this.attacks.length - 1))];
 
         switch (attackType) {
             case 'devastation_beam':
-                // Massive damage beam
                 Combat.addEffect({
                     type: 'beam',
                     x: this.x + this.width / 2,
@@ -311,7 +411,6 @@ class Boss {
                 break;
 
             case 'void_crush':
-                // Area damage
                 Combat.addEffect({
                     type: 'void',
                     x: player.x + player.width / 2,
@@ -324,8 +423,8 @@ class Boss {
                 break;
 
             case 'reality_tear':
-                // Multiple hits
-                for (let i = 0; i < 3; i++) {
+                const tears = 3 + Math.floor(this.encounterNumber / 2);
+                for (let i = 0; i < tears; i++) {
                     setTimeout(() => {
                         player.takeDamage(this.attack * 0.6);
                         Combat.addEffect({
@@ -340,7 +439,6 @@ class Boss {
                 break;
 
             case 'death_spiral':
-                // Ultimate attack
                 Combat.addEffect({
                     type: 'spiral',
                     x: this.x + this.width / 2,
@@ -352,6 +450,78 @@ class Boss {
                 setTimeout(() => {
                     player.takeDamage(this.attack * 3);
                 }, 500);
+                break;
+
+            case 'meteor_storm':
+                // New attack for encounter 2+
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => {
+                        const meteorX = Utils.random(50, 750);
+                        const meteorY = Utils.random(50, 550);
+                        Combat.addEffect({
+                            type: 'meteor',
+                            x: meteorX,
+                            y: meteorY,
+                            frame: 0,
+                            maxFrames: 30
+                        });
+                        const dist = Utils.distance(player.x, player.y, meteorX, meteorY);
+                        if (dist < 80) {
+                            player.takeDamage(this.attack * 2);
+                        }
+                    }, i * 200);
+                }
+                break;
+
+            case 'time_freeze':
+                // New attack for encounter 3+
+                player.statusEffects.push({
+                    type: 'FREEZE',
+                    duration: 3000 + (this.encounterNumber * 500),
+                    color: '#00FFFF',
+                    slowPercent: 50
+                });
+                Combat.addEffect({
+                    type: 'freeze',
+                    x: player.x + player.width / 2,
+                    y: player.y + player.height / 2,
+                    frame: 0,
+                    maxFrames: 40
+                });
+                break;
+
+            case 'dimension_collapse':
+                // New attack for encounter 4+
+                Combat.addEffect({
+                    type: 'dimension',
+                    x: 400,
+                    y: 300,
+                    frame: 0,
+                    maxFrames: 60
+                });
+                player.takeDamage(this.attack * 4);
+                // Applies weakness
+                player.statusEffects.push({
+                    type: 'WEAKNESS',
+                    duration: 10000,
+                    color: '#808080',
+                    attackReduction: 30
+                });
+                break;
+
+            case 'ultimate_destruction':
+                // New attack for encounter 5+
+                this.dialogueQueue.push("WITNESS ULTIMATE DESTRUCTION!");
+                Combat.addEffect({
+                    type: 'ultimate',
+                    x: 400,
+                    y: 300,
+                    frame: 0,
+                    maxFrames: 100
+                });
+                setTimeout(() => {
+                    player.takeDamage(this.attack * 10);
+                }, 1000);
                 break;
         }
     }
@@ -368,7 +538,6 @@ class Boss {
 
         switch (attackType) {
             case 'paper_storm':
-                // Rapid paper cuts
                 for (let i = 0; i < 5; i++) {
                     setTimeout(() => {
                         player.takeDamage(this.attack * 0.3);
@@ -397,7 +566,6 @@ class Boss {
                 break;
 
             case 'origami_clones':
-                // Create paper clones
                 for (let i = 0; i < 3; i++) {
                     const clone = new Enemy(
                         this.x + Utils.random(-100, 100),
@@ -423,7 +591,6 @@ class Boss {
                 break;
 
             case 'fold_reality':
-                // Warp attack
                 Combat.addEffect({
                     type: 'fold',
                     x: player.x + player.width / 2,
@@ -437,7 +604,6 @@ class Boss {
     }
 
     takeDamage(damage) {
-        // Boss has high defense - even strongest weapons struggle!
         const actualDamage = Math.max(1, damage - this.defense);
         this.hp -= actualDamage;
 
@@ -457,11 +623,18 @@ class Boss {
         if (this.type === 'anizon') {
             this.dialogueQueue = [
                 "IMPOSSIBLE... IMPOSSIBLE!!!",
-                "How could a mere child defeat ME?!",
-                "The University... will... not... fall...",
-                "But you... you have proven yourself...",
-                "CAPTAIN... ARCSIS..."
+                `You defeated me on Encounter ${this.encounterNumber}!`,
+                `Dropping ${this.keyDrops} SECRET KEY(S)!`,
+                "Use them to unlock doors and secrets...",
+                `You've unlocked friend: ${this.potentialFriends[Math.min(this.encounterNumber - 1, this.potentialFriends.length - 1)]}!`,
+                "I'll be back... STRONGER than before!",
+                "CAPTAIN... ARCSIS... You are WORTHY!"
             ];
+
+            // Drop keys for secrets
+            for (let i = 0; i < this.keyDrops; i++) {
+                this.secretKeys.push(`secret_key_${this.encounterNumber}_${i}`);
+            }
         } else if (this.type === 'origami_mirda') {
             this.dialogueQueue = [
                 "My paper form... crumbling...",
@@ -480,15 +653,12 @@ class Boss {
             this.drawOrigamiMirda(ctx);
         }
 
-        // Draw health bar
         this.drawBossHealthBar(ctx);
 
-        // Draw dialogue
         if (this.currentDialogue) {
             this.drawBossDialogue(ctx);
         }
 
-        // Draw summoned horsemen
         if (this.summonedHorsemen) {
             this.summonedHorsemen.forEach(h => h.draw(ctx));
         }
@@ -498,44 +668,50 @@ class Boss {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // Pulsing aura based on phase
-        const pulseSize = 20 + Math.sin(this.frame * 0.05) * 10 * this.phase;
+        // Pulsing aura based on phase and encounter
+        const pulseSize = 20 + Math.sin(this.frame * 0.05) * 10 * this.phase + (this.encounterNumber * 5);
         ctx.globalAlpha = 0.3;
-        ctx.fillStyle = this.phase === 3 ? '#FF0000' : this.phase === 2 ? '#FF6600' : '#9400D3';
+
+        // Color changes with encounter number
+        const encounterColors = ['#9400D3', '#FF6600', '#FF0000', '#FF00FF', '#FFFFFF'];
+        const auraColor = encounterColors[Math.min(this.encounterNumber - 1, encounterColors.length - 1)];
+        ctx.fillStyle = this.phase === 3 ? '#FF0000' : this.phase === 2 ? '#FF6600' : auraColor;
         ctx.fillRect(-pulseSize, -pulseSize, this.width + pulseSize * 2, this.height + pulseSize * 2);
         ctx.globalAlpha = 1;
 
         // Robot/Human-like body
         ctx.fillStyle = '#1C1C1C';
-        ctx.fillRect(20, 20, 40, 50); // Core body
+        ctx.fillRect(20, 20, 40, 50);
 
         // Head (menacing)
         ctx.fillStyle = '#2F2F2F';
         ctx.fillRect(24, 0, 32, 24);
 
-        // Glowing red eyes (INTENSE)
-        ctx.fillStyle = '#FF0000';
+        // Glowing red eyes (INTENSE - scales with encounter)
+        const eyeIntensity = Math.min(1, 0.5 + this.encounterNumber * 0.1);
+        ctx.fillStyle = `rgba(255, 0, 0, ${eyeIntensity})`;
         ctx.fillRect(28, 8, 8, 6);
         ctx.fillRect(44, 8, 8, 6);
 
         // Eye glow effect
-        ctx.globalAlpha = 0.5;
+        ctx.globalAlpha = 0.5 + Math.sin(this.frame * 0.1) * 0.3;
         ctx.fillStyle = '#FF0000';
         ctx.fillRect(26, 6, 12, 10);
         ctx.fillRect(42, 6, 12, 10);
         ctx.globalAlpha = 1;
 
-        // Armored shoulders
+        // Armored shoulders (bigger with encounters)
+        const shoulderSize = 16 + Math.floor(this.encounterNumber / 2) * 4;
         ctx.fillStyle = '#4A4A4A';
-        ctx.fillRect(8, 22, 16, 20);
-        ctx.fillRect(56, 22, 16, 20);
+        ctx.fillRect(8, 22, shoulderSize, 20);
+        ctx.fillRect(56, 22, shoulderSize, 20);
 
         // Powerful arms
         ctx.fillStyle = '#2F2F2F';
         ctx.fillRect(4, 40, 12, 30);
         ctx.fillRect(64, 40, 12, 30);
 
-        // Claws/Hands
+        // Claws/Hands - glow with power
         ctx.fillStyle = '#FF4500';
         ctx.fillRect(2, 68, 16, 12);
         ctx.fillRect(62, 68, 16, 12);
@@ -545,9 +721,10 @@ class Boss {
         ctx.fillRect(22, 70, 14, 26);
         ctx.fillRect(44, 70, 14, 26);
 
-        // Power core (glowing)
+        // Power core (glowing - intensity scales with encounters)
         const coreGlow = Math.abs(Math.sin(this.frame * 0.1));
-        ctx.fillStyle = `rgba(255, ${100 + coreGlow * 155}, 0, ${0.5 + coreGlow * 0.5})`;
+        const coreIntensity = 0.5 + coreGlow * 0.5 + (this.encounterNumber * 0.1);
+        ctx.fillStyle = `rgba(255, ${100 + coreGlow * 155}, 0, ${Math.min(1, coreIntensity)})`;
         ctx.fillRect(32, 35, 16, 16);
 
         // University destroyer symbol
@@ -555,16 +732,17 @@ class Boss {
         ctx.fillRect(36, 25, 8, 4);
         ctx.fillRect(38, 28, 4, 4);
 
+        // Encounter number indicator
+        ctx.font = '12px monospace';
+        ctx.fillStyle = '#FFD700';
+        ctx.textAlign = 'center';
+        ctx.fillText(`#${this.encounterNumber}`, 40, -10);
+
         // Phase indicators
-        if (this.phase >= 2) {
-            ctx.strokeStyle = '#FF6600';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(-5, -5, this.width + 10, this.height + 10);
-        }
-        if (this.phase >= 3) {
-            ctx.strokeStyle = '#FF0000';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(-10, -10, this.width + 20, this.height + 20);
+        for (let i = 0; i < this.phase; i++) {
+            ctx.strokeStyle = i === 0 ? '#FF6600' : i === 1 ? '#FF0000' : '#FF00FF';
+            ctx.lineWidth = 2 + i;
+            ctx.strokeRect(-5 - i * 5, -5 - i * 5, this.width + 10 + i * 10, this.height + 10 + i * 10);
         }
 
         ctx.restore();
@@ -574,14 +752,11 @@ class Boss {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // Paper texture effect
         const flutter = Math.sin(this.frame * 0.08) * 3;
 
-        // Folded paper body (goddess form)
         ctx.fillStyle = CONSTANTS.COLORS.PAPER;
         ctx.fillRect(16 + flutter, 20, 32, 40);
 
-        // Paper folds (geometric patterns)
         ctx.fillStyle = '#E0E0E0';
         ctx.beginPath();
         ctx.moveTo(16 + flutter, 20);
@@ -595,26 +770,21 @@ class Boss {
         ctx.lineTo(48 + flutter, 50);
         ctx.fill();
 
-        // Head (origami crane-like)
         ctx.fillStyle = CONSTANTS.COLORS.PAPER;
         ctx.fillRect(20, 0, 24, 24);
 
-        // Lightning patterns
         ctx.fillStyle = CONSTANTS.COLORS.LIGHTNING;
         ctx.fillRect(22, 4, 2, 16);
         ctx.fillRect(40, 4, 2, 16);
 
-        // Glowing eyes
         ctx.fillStyle = '#FFFF00';
         ctx.fillRect(26, 8, 4, 4);
         ctx.fillRect(34, 8, 4, 4);
 
-        // Paper wings
         ctx.fillStyle = CONSTANTS.COLORS.PAPER;
         ctx.fillRect(0, 24 - flutter, 16, 32);
         ctx.fillRect(48, 24 + flutter, 16, 32);
 
-        // Lightning crackling
         if (this.frame % 30 < 15) {
             ctx.strokeStyle = '#FFFF00';
             ctx.lineWidth = 2;
@@ -626,7 +796,6 @@ class Boss {
             ctx.stroke();
         }
 
-        // Crown (goddess)
         ctx.fillStyle = '#FFD700';
         ctx.fillRect(24, -6, 16, 6);
         ctx.fillRect(28, -10, 8, 6);
@@ -642,28 +811,29 @@ class Boss {
         const barX = (CONSTANTS.CANVAS_WIDTH - barWidth) / 2;
         const barY = 20;
 
-        // Background
         ctx.fillStyle = '#000000';
         ctx.fillRect(barX - 2, barY - 2, barWidth + 4, barHeight + 4);
 
-        // Health
         const healthPercent = this.hp / this.maxHp;
         ctx.fillStyle = healthPercent > 0.5 ? '#FF0000' : healthPercent > 0.25 ? '#FF6600' : '#FF00FF';
         ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
 
-        // Border
         ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 2;
         ctx.strokeRect(barX, barY, barWidth, barHeight);
 
-        // Boss name
         ctx.font = '14px monospace';
         ctx.fillStyle = '#FFFFFF';
         ctx.textAlign = 'center';
         ctx.fillText(this.name, CONSTANTS.CANVAS_WIDTH / 2, barY - 6);
 
-        // Phase indicator
-        ctx.fillText(`Phase ${this.phase}/${this.maxPhases || 1}`, CONSTANTS.CANVAS_WIDTH / 2, barY + 36);
+        // Show actual HP numbers for Anizon
+        if (this.type === 'anizon') {
+            ctx.fillText(`HP: ${Utils.formatNumber(this.hp)} / ${Utils.formatNumber(this.maxHp)}`, CONSTANTS.CANVAS_WIDTH / 2, barY + 36);
+            ctx.fillText(`Phase ${this.phase}/${this.maxPhases} | ATK: ${Math.floor(this.attack)} | DEF: ${this.defense}`, CONSTANTS.CANVAS_WIDTH / 2, barY + 52);
+        } else {
+            ctx.fillText(`Phase ${this.phase}/${this.maxPhases || 1}`, CONSTANTS.CANVAS_WIDTH / 2, barY + 36);
+        }
 
         ctx.restore();
     }
@@ -705,9 +875,15 @@ class Boss {
 const Bosses = {
     currentBoss: null,
 
-    spawn: function(type) {
-        this.currentBoss = new Boss(type);
+    spawn: function(type, encounterNumber = 1) {
+        this.currentBoss = new Boss(type, encounterNumber);
         return this.currentBoss;
+    },
+
+    spawnAnizon: function(player) {
+        // Spawn Anizon with progressive difficulty based on player's defeats
+        const encounterNumber = player.anizonDefeats + 1;
+        return this.spawn('anizon', encounterNumber);
     },
 
     activate: function() {
@@ -731,7 +907,6 @@ const Bosses = {
     checkCollisions: function(player) {
         if (!this.currentBoss || !this.currentBoss.active || this.currentBoss.defeated) return;
 
-        // Check player attacks against boss
         if (player.attacking) {
             const attackBox = player.getAttackHitbox();
             if (Utils.collides(attackBox, this.currentBoss.getHitbox())) {
@@ -742,8 +917,12 @@ const Bosses = {
                     Combat.addDamageNumber(
                         this.currentBoss.x + this.currentBoss.width / 2,
                         this.currentBoss.y,
-                        actualDamage
+                        actualDamage,
+                        player.lastCritical ? '#FFD700' : '#FF0000'
                     );
+
+                    player.registerHit();
+                    player.totalDamageDealt += actualDamage;
                 }
             }
         }
@@ -755,5 +934,12 @@ const Bosses = {
 
     isDefeated: function() {
         return this.currentBoss && this.currentBoss.defeated;
+    },
+
+    getSecretKeys: function() {
+        if (this.currentBoss && this.currentBoss.type === 'anizon') {
+            return this.currentBoss.secretKeys;
+        }
+        return [];
     }
 };

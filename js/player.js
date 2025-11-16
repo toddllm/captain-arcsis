@@ -1,4 +1,5 @@
-// Player Character - Captain Arcsis
+// Player Character - Captain Arcsis ENHANCED EDITION
+// With Color Variants, Infinite Equipment Evolution, Spell Learning, and More!
 
 const Player = {
     x: 400,
@@ -9,31 +10,61 @@ const Player = {
     direction: 'down',
     frame: 0,
 
+    // Arcsis Type (YELLOW, RED, GREEN, BLUE)
+    arcsisType: 'BLUE', // Default type
+    typeBonuses: null,
+
     // Stats
     hp: CONSTANTS.PLAYER_BASE_HP,
     maxHp: CONSTANTS.PLAYER_BASE_HP,
     attack: CONSTANTS.PLAYER_BASE_ATTACK,
     defense: CONSTANTS.PLAYER_BASE_DEFENSE,
+    critChance: CONSTANTS.CRIT_CHANCE_BASE,
+    dodgeChance: 0,
 
-    // Experience and level
+    // Experience and level (INFINITE SCALING)
     level: 1,
     exp: 0,
     expToNext: CONSTANTS.EXP_BASE,
 
-    // Equipment
+    // INFINITE Equipment Evolution System
     equipment: {
+        // Sword - INFINITE LEVELS
         swordLevel: 1,
-        shieldLevel: 1,
         swordExp: 0,
-        shieldExp: 0,
         swordExpToNext: 50,
-        shieldExpToNext: 50
+        swordRarity: 'COMMON',
+        swordName: 'Rusty Blade',
+        swordKills: 0,
+        swordCombo: 0,
+        maxCombo: 0,
+
+        // Shield - INFINITE LEVELS
+        shieldLevel: 1,
+        shieldExp: 0,
+        shieldExpToNext: 50,
+        shieldRarity: 'COMMON',
+        shieldName: 'Wooden Buckler',
+        shieldBlocks: 0,
+        perfectBlocks: 0
     },
+
+    // Spell Learning System
+    learnedSpells: ['light'], // Start with basic light spell
+    availableSpells: ['heal', 'blast', 'shield', 'fireball', 'icestorm', 'lightning', 'earthquake', 'teleport', 'timestop', 'meteor'],
+    spellProgress: {}, // Progress towards learning each spell
+    selectedSpell: 0,
 
     // Inventory
     coins: 0,
     keys: 0,
+    secretKeys: 0, // Special keys from Anizon
     items: [],
+    potions: {
+        health: 3,
+        mana: 3,
+        mega: 0
+    },
 
     // Combat state
     attacking: false,
@@ -41,20 +72,95 @@ const Player = {
     invincible: false,
     invincibilityTimer: 0,
     hitStun: 0,
+    comboTimer: 0,
+    currentCombo: 0,
+    lastCritical: false,
+
+    // Status Effects
+    statusEffects: [],
 
     // Fairy companion
     hasFairy: false,
     fairyMana: 100,
     maxFairyMana: 100,
 
+    // Anizon Encounter Tracking
+    anizonDefeats: 0,
+    anizonFriends: [], // Friends unlocked from Anizon
+    secretsUnlocked: [],
+
+    // Skill Points and Skill Tree
+    skillPoints: 0,
+    skills: {
+        // Combat Skills
+        swordMastery: 0,      // +10% sword damage per level
+        shieldMastery: 0,     // +10% shield effectiveness per level
+        criticalStrike: 0,    // +5% crit chance per level
+        comboMaster: 0,       // +2s combo window per level
+        lifesteal: 0,         // 5% lifesteal per level
+
+        // Magic Skills
+        manaPool: 0,          // +20 max mana per level
+        spellPower: 0,        // +15% spell damage per level
+        fastCasting: 0,       // -10% cooldown per level
+        manaRegen: 0,         // +50% mana regen per level
+
+        // Survival Skills
+        vitality: 0,          // +25 max HP per level
+        regeneration: 0,      // +1 HP/s per level
+        dodgeRoll: 0,         // +3% dodge chance per level
+        lastStand: 0          // 10% chance to survive fatal hit per level
+    },
+
+    // Achievements
+    achievements: [],
+    totalDamageDealt: 0,
+    totalDamageTaken: 0,
+    enemiesKilled: 0,
+    bossesDefeated: 0,
+    secretsFound: 0,
+    maxLevelReached: 1,
+
     // Quest progress
     questFlags: {},
 
-    init: function(x, y) {
+    init: function(x, y, arcsisType = 'BLUE') {
         this.x = x || 400;
         this.y = y || 300;
+        this.setArcsisType(arcsisType);
         this.hp = this.maxHp;
         this.frame = 0;
+        this.statusEffects = [];
+        this.currentCombo = 0;
+        this.comboTimer = 0;
+
+        // Initialize spell progress
+        this.availableSpells.forEach(spell => {
+            if (!this.spellProgress[spell]) {
+                this.spellProgress[spell] = 0;
+            }
+        });
+    },
+
+    setArcsisType: function(type) {
+        this.arcsisType = type;
+        this.typeBonuses = CONSTANTS.ARCSIS_TYPES[type].bonuses;
+
+        // Apply type bonuses
+        this.attack = this.typeBonuses.baseAttack || CONSTANTS.PLAYER_BASE_ATTACK;
+        this.defense = this.typeBonuses.baseDefense || CONSTANTS.PLAYER_BASE_DEFENSE;
+
+        if (this.typeBonuses.speed) {
+            this.speed = CONSTANTS.PLAYER_SPEED * this.typeBonuses.speed;
+        }
+
+        if (this.typeBonuses.critChance) {
+            this.critChance = CONSTANTS.CRIT_CHANCE_BASE + this.typeBonuses.critChance;
+        }
+
+        if (this.typeBonuses.dodgeChance) {
+            this.dodgeChance = this.typeBonuses.dodgeChance;
+        }
     },
 
     update: function(deltaTime, world) {
@@ -68,6 +174,23 @@ const Player = {
             if (this.invincibilityTimer <= 0) {
                 this.invincible = false;
             }
+        }
+
+        // Update combo timer
+        if (this.comboTimer > 0) {
+            this.comboTimer -= deltaTime;
+            if (this.comboTimer <= 0) {
+                this.endCombo();
+            }
+        }
+
+        // Update status effects
+        this.updateStatusEffects(deltaTime);
+
+        // HP Regeneration (Green Arcsis or Regeneration skill)
+        if (this.typeBonuses.hpRegen || this.skills.regeneration > 0) {
+            const regenRate = (this.typeBonuses.hpRegen || 0) + this.skills.regeneration;
+            this.heal(regenRate * (deltaTime / 1000));
         }
 
         if (this.hitStun > 0) {
@@ -94,6 +217,13 @@ const Player = {
         if (Input.isPressed('KeyD') || Input.isPressed('ArrowRight')) {
             dx = this.speed;
             this.direction = 'right';
+        }
+
+        // Apply freeze slow
+        const freezeEffect = this.statusEffects.find(e => e.type === 'FREEZE');
+        if (freezeEffect) {
+            dx *= 0.5;
+            dy *= 0.5;
         }
 
         // Normalize diagonal movement
@@ -127,10 +257,47 @@ const Player = {
             this.startAttack();
         }
 
+        // Handle potion usage
+        if (Input.wasJustPressed('Digit1') && this.potions.health > 0) {
+            this.useHealthPotion();
+        }
+        if (Input.wasJustPressed('Digit2') && this.potions.mana > 0) {
+            this.useManaPotion();
+        }
+        if (Input.wasJustPressed('Digit3') && this.potions.mega > 0) {
+            this.useMegaPotion();
+        }
+
         // Regenerate fairy mana
         if (this.hasFairy && this.fairyMana < this.maxFairyMana) {
-            this.fairyMana = Math.min(this.maxFairyMana, this.fairyMana + deltaTime * 0.01);
+            let manaRegenRate = 0.01;
+            if (this.typeBonuses.manaRegen) {
+                manaRegenRate *= this.typeBonuses.manaRegen;
+            }
+            if (this.skills.manaRegen > 0) {
+                manaRegenRate *= (1 + this.skills.manaRegen * 0.5);
+            }
+            this.fairyMana = Math.min(this.maxFairyMana, this.fairyMana + deltaTime * manaRegenRate);
         }
+    },
+
+    updateStatusEffects: function(deltaTime) {
+        this.statusEffects = this.statusEffects.filter(effect => {
+            effect.duration -= deltaTime;
+
+            // Apply tick damage
+            if (effect.tickDamage) {
+                effect.tickTimer = (effect.tickTimer || 0) + deltaTime;
+                if (effect.tickTimer >= 1000) {
+                    this.hp -= effect.tickDamage;
+                    effect.tickTimer = 0;
+
+                    Combat.addDamageNumber(this.x + this.width / 2, this.y, effect.tickDamage, effect.color);
+                }
+            }
+
+            return effect.duration > 0;
+        });
     },
 
     checkWorldCollision: function(x, y, world) {
@@ -138,10 +305,10 @@ const Player = {
 
         // Check corners of player hitbox
         const checkPoints = [
-            { x: x + 4, y: y + this.height - 4 }, // Bottom left
-            { x: x + this.width - 4, y: y + this.height - 4 }, // Bottom right
-            { x: x + 4, y: y + this.height / 2 }, // Middle left
-            { x: x + this.width - 4, y: y + this.height / 2 } // Middle right
+            { x: x + 4, y: y + this.height - 4 },
+            { x: x + this.width - 4, y: y + this.height - 4 },
+            { x: x + 4, y: y + this.height / 2 },
+            { x: x + this.width - 4, y: y + this.height / 2 }
         ];
 
         for (let point of checkPoints) {
@@ -158,7 +325,14 @@ const Player = {
 
     startAttack: function() {
         this.attacking = true;
-        this.attackCooldown = CONSTANTS.ATTACK_COOLDOWN;
+
+        // Apply fast casting skill
+        let cooldown = CONSTANTS.ATTACK_COOLDOWN;
+        if (this.skills.fastCasting > 0) {
+            cooldown *= (1 - this.skills.fastCasting * 0.1);
+        }
+
+        this.attackCooldown = cooldown;
         Audio.swordSwing();
 
         // Attack ends after short duration
@@ -168,52 +342,128 @@ const Player = {
     },
 
     getAttackHitbox: function() {
-        const range = 40 + (this.equipment.swordLevel * 2);
+        const baseRange = 40;
+        const swordBonus = this.equipment.swordLevel * 2;
+        const comboBonus = Math.min(this.currentCombo * 5, 50);
+        const range = baseRange + swordBonus + comboBonus;
 
         switch (this.direction) {
             case 'right':
-                return {
-                    x: this.x + this.width,
-                    y: this.y,
-                    width: range,
-                    height: this.height
-                };
+                return { x: this.x + this.width, y: this.y, width: range, height: this.height };
             case 'left':
-                return {
-                    x: this.x - range,
-                    y: this.y,
-                    width: range,
-                    height: this.height
-                };
+                return { x: this.x - range, y: this.y, width: range, height: this.height };
             case 'up':
-                return {
-                    x: this.x,
-                    y: this.y - range,
-                    width: this.width,
-                    height: range
-                };
+                return { x: this.x, y: this.y - range, width: this.width, height: range };
             case 'down':
-                return {
-                    x: this.x,
-                    y: this.y + this.height,
-                    width: this.width,
-                    height: range
-                };
+                return { x: this.x, y: this.y + this.height, width: this.width, height: range };
         }
     },
 
     calculateDamage: function() {
-        const baseDamage = this.attack + (this.equipment.swordLevel * 5);
+        // Base damage
+        let baseDamage = this.attack;
+
+        // Sword level bonus (INFINITE SCALING)
+        baseDamage += this.getSwordDamageBonus();
+
+        // Apply rarity multiplier
+        const rarityBonus = CONSTANTS.RARITY[this.equipment.swordRarity].multiplier;
+        baseDamage *= rarityBonus;
+
+        // Type bonus (Red = Attack focused)
+        if (this.typeBonuses.attackPower) {
+            baseDamage *= this.typeBonuses.attackPower;
+        }
+
+        // Skill bonuses
+        if (this.skills.swordMastery > 0) {
+            baseDamage *= (1 + this.skills.swordMastery * 0.1);
+        }
+
+        // Combo multiplier
+        const comboMultiplier = 1 + (this.currentCombo * 0.1);
+        baseDamage *= comboMultiplier;
+
+        // Check for critical hit
+        let totalCritChance = this.critChance + (this.skills.criticalStrike * 5);
+        this.lastCritical = Math.random() * 100 < totalCritChance;
+
+        if (this.lastCritical) {
+            baseDamage *= CONSTANTS.CRIT_MULTIPLIER;
+        }
+
+        // Variance
         const variance = Utils.random(-2, 2);
-        return Math.max(1, baseDamage + variance);
+
+        // Weakness debuff
+        const weaknessEffect = this.statusEffects.find(e => e.type === 'WEAKNESS');
+        if (weaknessEffect) {
+            baseDamage *= (1 - weaknessEffect.attackReduction / 100);
+        }
+
+        return Math.max(1, Math.floor(baseDamage + variance));
+    },
+
+    getSwordDamageBonus: function() {
+        // INFINITE SCALING - damage increases exponentially
+        const level = this.equipment.swordLevel;
+        const baseBonus = level * 5;
+        const exponentialBonus = Math.floor(Math.pow(level, 1.3));
+        return baseBonus + exponentialBonus;
+    },
+
+    getShieldReduction: function() {
+        // INFINITE SCALING - defense increases exponentially
+        const level = this.equipment.shieldLevel;
+        const baseReduction = level * 2;
+        const exponentialReduction = Math.floor(Math.pow(level, 1.2));
+
+        let total = baseReduction + exponentialReduction;
+
+        // Apply rarity bonus
+        const rarityBonus = CONSTANTS.RARITY[this.equipment.shieldRarity].multiplier;
+        total *= rarityBonus;
+
+        // Skill bonus
+        if (this.skills.shieldMastery > 0) {
+            total *= (1 + this.skills.shieldMastery * 0.1);
+        }
+
+        // Type bonus (Green = Defense focused)
+        if (this.typeBonuses.defense) {
+            total *= this.typeBonuses.defense;
+        }
+
+        return Math.floor(total);
     },
 
     takeDamage: function(damage) {
         if (this.invincible) return 0;
 
-        // Shield reduces damage based on evolution level
-        const shieldReduction = this.equipment.shieldLevel * 2;
-        const actualDamage = Math.max(1, damage - this.defense - shieldReduction);
+        // Check dodge (Blue Arcsis)
+        const totalDodge = this.dodgeChance + (this.skills.dodgeRoll * 3);
+        if (Math.random() * 100 < totalDodge) {
+            Combat.addEffect({
+                type: 'dodge',
+                x: this.x + this.width / 2,
+                y: this.y,
+                frame: 0,
+                maxFrames: 20
+            });
+            return 0;
+        }
+
+        // Shield reduces damage
+        const shieldReduction = this.getShieldReduction();
+
+        // Curse effect reduces defense
+        const curseEffect = this.statusEffects.find(e => e.type === 'CURSE');
+        let defenseValue = this.defense;
+        if (curseEffect) {
+            defenseValue *= (1 - curseEffect.defenseReduction / 100);
+        }
+
+        const actualDamage = Math.max(1, damage - defenseValue - shieldReduction);
 
         this.hp -= actualDamage;
         this.invincible = true;
@@ -222,9 +472,34 @@ const Player = {
 
         Audio.playerHurt();
 
+        // Lifesteal
+        if (this.skills.lifesteal > 0) {
+            const lifestealAmount = actualDamage * (this.skills.lifesteal * 0.05);
+            this.heal(lifestealAmount);
+        }
+
+        // Track damage taken
+        this.totalDamageTaken += actualDamage;
+
         // Level up shield through use
         this.equipment.shieldExp += actualDamage;
+        this.equipment.shieldBlocks++;
         this.checkShieldEvolution();
+
+        // Last Stand skill
+        if (this.hp <= 0 && this.skills.lastStand > 0) {
+            const surviveChance = this.skills.lastStand * 10;
+            if (Math.random() * 100 < surviveChance) {
+                this.hp = 1;
+                Combat.addEffect({
+                    type: 'laststand',
+                    x: this.x + this.width / 2,
+                    y: this.y + this.height / 2,
+                    frame: 0,
+                    maxFrames: 30
+                });
+            }
+        }
 
         if (this.hp <= 0) {
             this.hp = 0;
@@ -234,8 +509,102 @@ const Player = {
         return actualDamage;
     },
 
+    registerHit: function() {
+        // Called when player successfully hits enemy
+        this.currentCombo++;
+        this.equipment.swordCombo++;
+
+        // Update max combo
+        if (this.currentCombo > this.equipment.maxCombo) {
+            this.equipment.maxCombo = this.currentCombo;
+        }
+        if (this.currentCombo > this.maxCombo) {
+            this.maxCombo = this.currentCombo;
+        }
+
+        // Reset combo timer
+        const baseTimer = 3000;
+        const skillBonus = this.skills.comboMaster * 2000;
+        this.comboTimer = baseTimer + skillBonus;
+
+        // Show combo indicator
+        if (this.currentCombo >= 5) {
+            Combat.addEffect({
+                type: 'combo',
+                x: this.x + this.width / 2,
+                y: this.y - 30,
+                frame: 0,
+                maxFrames: 30,
+                combo: this.currentCombo
+            });
+        }
+    },
+
+    endCombo: function() {
+        if (this.currentCombo >= 10) {
+            // Bonus for high combo
+            const bonusExp = this.currentCombo * 10;
+            this.addExp(bonusExp);
+        }
+        this.currentCombo = 0;
+    },
+
     heal: function(amount) {
         this.hp = Math.min(this.maxHp, this.hp + amount);
+    },
+
+    useHealthPotion: function() {
+        if (this.potions.health <= 0) return;
+
+        const healAmount = this.maxHp * 0.5;
+        this.heal(healAmount);
+        this.potions.health--;
+
+        Audio.itemUse();
+        Combat.addEffect({
+            type: 'potion',
+            x: this.x + this.width / 2,
+            y: this.y + this.height / 2,
+            frame: 0,
+            maxFrames: 20,
+            color: '#FF0000'
+        });
+    },
+
+    useManaPotion: function() {
+        if (this.potions.mana <= 0) return;
+
+        const manaAmount = this.maxFairyMana * 0.5;
+        this.fairyMana = Math.min(this.maxFairyMana, this.fairyMana + manaAmount);
+        this.potions.mana--;
+
+        Audio.itemUse();
+        Combat.addEffect({
+            type: 'potion',
+            x: this.x + this.width / 2,
+            y: this.y + this.height / 2,
+            frame: 0,
+            maxFrames: 20,
+            color: '#0088FF'
+        });
+    },
+
+    useMegaPotion: function() {
+        if (this.potions.mega <= 0) return;
+
+        this.hp = this.maxHp;
+        this.fairyMana = this.maxFairyMana;
+        this.statusEffects = [];
+        this.potions.mega--;
+
+        Audio.itemUse();
+        Combat.addEffect({
+            type: 'megapotion',
+            x: this.x + this.width / 2,
+            y: this.y + this.height / 2,
+            frame: 0,
+            maxFrames: 40
+        });
     },
 
     addExp: function(amount) {
@@ -256,35 +625,215 @@ const Player = {
         this.expToNext = Math.floor(CONSTANTS.EXP_BASE * Math.pow(CONSTANTS.EXP_MULTIPLIER, this.level - 1));
 
         // Increase stats
-        this.maxHp += 10;
+        let hpGain = 10 + (this.skills.vitality * 25);
+        this.maxHp += hpGain;
         this.hp = this.maxHp; // Full heal on level up
         this.attack += 2;
         this.defense += 1;
 
+        // Magic pool increase
+        if (this.skills.manaPool > 0) {
+            this.maxFairyMana += 5;
+        }
+
+        // Gain skill point every 5 levels
+        if (this.level % 5 === 0) {
+            this.skillPoints++;
+        }
+
+        // Track max level
+        if (this.level > this.maxLevelReached) {
+            this.maxLevelReached = this.level;
+        }
+
         Audio.levelUp();
+
+        // Check achievements
+        this.checkLevelAchievements();
     },
 
     checkSwordLevel: function() {
-        while (this.equipment.swordExp >= this.equipment.swordExpToNext && this.equipment.swordLevel < 10) {
+        // INFINITE SCALING - no level cap!
+        while (this.equipment.swordExp >= this.equipment.swordExpToNext) {
             this.equipment.swordExp -= this.equipment.swordExpToNext;
             this.equipment.swordLevel++;
+
+            // Exponential scaling for exp requirement
             this.equipment.swordExpToNext = Math.floor(50 * Math.pow(1.8, this.equipment.swordLevel - 1));
+
+            // Update sword name and rarity based on level
+            this.updateSwordTier();
+
             Audio.levelUp();
         }
     },
 
+    updateSwordTier: function() {
+        const level = this.equipment.swordLevel;
+
+        if (level >= 100) {
+            this.equipment.swordRarity = 'DIVINE';
+            this.equipment.swordName = 'Godslayer Blade';
+        } else if (level >= 75) {
+            this.equipment.swordRarity = 'MYTHIC';
+            this.equipment.swordName = 'Mythic Destroyer';
+        } else if (level >= 50) {
+            this.equipment.swordRarity = 'LEGENDARY';
+            this.equipment.swordName = 'Legendary Excalibur';
+        } else if (level >= 35) {
+            this.equipment.swordRarity = 'EPIC';
+            this.equipment.swordName = 'Epic Flamebrand';
+        } else if (level >= 20) {
+            this.equipment.swordRarity = 'RARE';
+            this.equipment.swordName = 'Rare Frostbite';
+        } else if (level >= 10) {
+            this.equipment.swordRarity = 'UNCOMMON';
+            this.equipment.swordName = 'Tempered Steel';
+        } else {
+            this.equipment.swordRarity = 'COMMON';
+            this.equipment.swordName = 'Iron Sword';
+        }
+    },
+
     checkShieldEvolution: function() {
-        while (this.equipment.shieldExp >= this.equipment.shieldExpToNext && this.equipment.shieldLevel < 10) {
+        // INFINITE SCALING - no level cap!
+        while (this.equipment.shieldExp >= this.equipment.shieldExpToNext) {
             this.equipment.shieldExp -= this.equipment.shieldExpToNext;
             this.equipment.shieldLevel++;
+
+            // Exponential scaling
             this.equipment.shieldExpToNext = Math.floor(50 * Math.pow(2, this.equipment.shieldLevel - 1));
+
+            // Update shield tier
+            this.updateShieldTier();
+
             Audio.levelUp();
+        }
+    },
+
+    updateShieldTier: function() {
+        const level = this.equipment.shieldLevel;
+
+        if (level >= 100) {
+            this.equipment.shieldRarity = 'DIVINE';
+            this.equipment.shieldName = 'Divine Aegis';
+        } else if (level >= 75) {
+            this.equipment.shieldRarity = 'MYTHIC';
+            this.equipment.shieldName = 'Mythic Fortress';
+        } else if (level >= 50) {
+            this.equipment.shieldRarity = 'LEGENDARY';
+            this.equipment.shieldName = 'Legendary Bulwark';
+        } else if (level >= 35) {
+            this.equipment.shieldRarity = 'EPIC';
+            this.equipment.shieldName = 'Epic Crystal Guard';
+        } else if (level >= 20) {
+            this.equipment.shieldRarity = 'RARE';
+            this.equipment.shieldName = 'Rare Ironwall';
+        } else if (level >= 10) {
+            this.equipment.shieldRarity = 'UNCOMMON';
+            this.equipment.shieldName = 'Reinforced Shield';
+        } else {
+            this.equipment.shieldRarity = 'COMMON';
+            this.equipment.shieldName = 'Wooden Shield';
+        }
+    },
+
+    // Spell Learning System
+    learnSpell: function(spellName) {
+        if (this.learnedSpells.includes(spellName)) return false;
+        if (!this.availableSpells.includes(spellName)) return false;
+
+        this.learnedSpells.push(spellName);
+        Audio.levelUp();
+        return true;
+    },
+
+    addSpellProgress: function(spellName, amount) {
+        if (this.learnedSpells.includes(spellName)) return;
+        if (!this.availableSpells.includes(spellName)) return;
+
+        this.spellProgress[spellName] = (this.spellProgress[spellName] || 0) + amount;
+
+        // Auto-learn when progress reaches 100
+        if (this.spellProgress[spellName] >= 100) {
+            this.learnSpell(spellName);
+            this.spellProgress[spellName] = 0;
+        }
+    },
+
+    // Skill System
+    spendSkillPoint: function(skillName) {
+        if (this.skillPoints <= 0) return false;
+        if (!this.skills.hasOwnProperty(skillName)) return false;
+        if (this.skills[skillName] >= 10) return false; // Max level 10
+
+        this.skills[skillName]++;
+        this.skillPoints--;
+
+        // Apply immediate effects
+        if (skillName === 'vitality') {
+            this.maxHp += 25;
+            this.hp += 25;
+        }
+        if (skillName === 'manaPool') {
+            this.maxFairyMana += 20;
+        }
+
+        return true;
+    },
+
+    // Anizon progression
+    onAnizonDefeat: function() {
+        this.anizonDefeats++;
+
+        // Unlock Anizon friends
+        const friends = ['Shadow Warrior', 'Ghost Knight', 'Dark Mage', 'Void Walker', 'Death Knight'];
+        if (this.anizonDefeats <= friends.length) {
+            const newFriend = friends[this.anizonDefeats - 1];
+            this.anizonFriends.push(newFriend);
+        }
+
+        // Drop special keys
+        this.secretKeys += this.anizonDefeats;
+
+        // Massive exp and coin reward
+        const expReward = 1000 * Math.pow(2, this.anizonDefeats - 1);
+        const coinReward = 500 * Math.pow(2, this.anizonDefeats - 1);
+        this.addExp(expReward);
+        this.addCoins(coinReward);
+    },
+
+    useSecretKey: function() {
+        if (this.secretKeys > 0) {
+            this.secretKeys--;
+            return true;
+        }
+        return false;
+    },
+
+    checkLevelAchievements: function() {
+        if (this.level >= 10 && !this.achievements.includes('level_10')) {
+            this.achievements.push('level_10');
+        }
+        if (this.level >= 50 && !this.achievements.includes('level_50')) {
+            this.achievements.push('level_50');
+        }
+        if (this.level >= 100 && !this.achievements.includes('level_100')) {
+            this.achievements.push('level_100');
         }
     },
 
     addCoins: function(amount) {
         this.coins += amount;
         Audio.coinCollect();
+    },
+
+    spendCoins: function(amount) {
+        if (this.coins >= amount) {
+            this.coins -= amount;
+            return true;
+        }
+        return false;
     },
 
     addKey: function() {
@@ -313,14 +862,42 @@ const Player = {
             ctx.globalAlpha = 0.5;
         }
 
-        Sprites.drawArcsis(ctx, this.x, this.y, this.direction, this.frame, this.equipment);
+        // Draw status effect visual
+        if (this.statusEffects.length > 0) {
+            this.drawStatusEffects(ctx);
+        }
+
+        Sprites.drawArcsis(ctx, this.x, this.y, this.direction, this.frame, this.equipment, this.arcsisType);
 
         ctx.globalAlpha = 1;
 
         // Draw attack effect
         if (this.attacking) {
-            Sprites.drawSlash(ctx, this.x + this.width / 2, this.y + this.height / 2, this.direction, (200 - this.attackCooldown) / 20);
+            Sprites.drawSlash(ctx, this.x + this.width / 2, this.y + this.height / 2, this.direction, (200 - this.attackCooldown) / 20, this.lastCritical);
         }
+
+        // Draw combo counter
+        if (this.currentCombo >= 3) {
+            this.drawComboCounter(ctx);
+        }
+    },
+
+    drawStatusEffects: function(ctx) {
+        this.statusEffects.forEach((effect, index) => {
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = effect.color;
+            ctx.fillRect(this.x - 2, this.y - 2, this.width + 4, this.height + 4);
+        });
+        ctx.globalAlpha = 1;
+    },
+
+    drawComboCounter: function(ctx) {
+        ctx.save();
+        ctx.font = 'bold 16px monospace';
+        ctx.fillStyle = '#FFD700';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${this.currentCombo}x COMBO!`, this.x + this.width / 2, this.y - 10);
+        ctx.restore();
     },
 
     getHitbox: function() {
@@ -336,25 +913,45 @@ const Player = {
         return {
             x: this.x,
             y: this.y,
+            arcsisType: this.arcsisType,
             hp: this.hp,
             maxHp: this.maxHp,
             attack: this.attack,
             defense: this.defense,
+            critChance: this.critChance,
+            dodgeChance: this.dodgeChance,
             level: this.level,
             exp: this.exp,
             expToNext: this.expToNext,
             equipment: Utils.clone(this.equipment),
+            learnedSpells: [...this.learnedSpells],
+            spellProgress: Utils.clone(this.spellProgress),
             coins: this.coins,
             keys: this.keys,
+            secretKeys: this.secretKeys,
             items: [...this.items],
+            potions: Utils.clone(this.potions),
             hasFairy: this.hasFairy,
             fairyMana: this.fairyMana,
             maxFairyMana: this.maxFairyMana,
+            anizonDefeats: this.anizonDefeats,
+            anizonFriends: [...this.anizonFriends],
+            secretsUnlocked: [...this.secretsUnlocked],
+            skillPoints: this.skillPoints,
+            skills: Utils.clone(this.skills),
+            achievements: [...this.achievements],
+            totalDamageDealt: this.totalDamageDealt,
+            totalDamageTaken: this.totalDamageTaken,
+            enemiesKilled: this.enemiesKilled,
+            bossesDefeated: this.bossesDefeated,
+            secretsFound: this.secretsFound,
+            maxLevelReached: this.maxLevelReached,
             questFlags: Utils.clone(this.questFlags)
         };
     },
 
     loadSaveData: function(data) {
         Object.assign(this, data);
+        this.typeBonuses = CONSTANTS.ARCSIS_TYPES[this.arcsisType].bonuses;
     }
 };
