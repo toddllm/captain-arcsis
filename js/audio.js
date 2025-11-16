@@ -119,6 +119,49 @@ const Audio = {
         setTimeout(() => this.playTone(880, 0.3, 'sine', 0.3), 200);
     },
 
+    itemUse: function() {
+        this.playTone(600, 0.1, 'sine', 0.4);
+        setTimeout(() => this.playTone(900, 0.15, 'sine', 0.3), 100);
+        setTimeout(() => this.playTone(1200, 0.2, 'sine', 0.2), 200);
+    },
+
+    shopPurchase: function() {
+        this.playTone(800, 0.15, 'square', 0.4);
+        setTimeout(() => this.playTone(1000, 0.15, 'square', 0.4), 150);
+        setTimeout(() => this.playTone(1200, 0.2, 'square', 0.3), 300);
+    },
+
+    spellLearn: function() {
+        const notes = [523, 784, 1047, 1318, 1568]; // C5, G5, C6, E6, G6
+        notes.forEach((note, i) => {
+            setTimeout(() => this.playTone(note, 0.3, 'sine', 0.4), i * 120);
+        });
+    },
+
+    criticalHit: function() {
+        this.playTone(1000, 0.1, 'sawtooth', 0.5);
+        setTimeout(() => this.playTone(1500, 0.15, 'sawtooth', 0.4), 50);
+    },
+
+    comboBreak: function() {
+        this.playTone(500, 0.2, 'square', 0.3);
+        setTimeout(() => this.playTone(400, 0.3, 'square', 0.2), 150);
+    },
+
+    achievementUnlock: function() {
+        const melody = [659, 784, 988, 1175, 1318]; // E5, G5, B5, D6, E6
+        melody.forEach((note, i) => {
+            setTimeout(() => this.playTone(note, 0.25, 'sine', 0.5), i * 100);
+        });
+    },
+
+    secretFound: function() {
+        const melody = [440, 494, 523, 587, 659, 698, 784, 880]; // Scale up
+        melody.forEach((note, i) => {
+            setTimeout(() => this.playTone(note, 0.15, 'triangle', 0.4), i * 80);
+        });
+    },
+
     gameOver: function() {
         const notes = [400, 350, 300, 250, 200];
         notes.forEach((note, i) => {
