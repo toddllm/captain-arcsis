@@ -253,6 +253,16 @@ const Game = {
 
         World.loadArea('forest');
 
+        // CRITICAL FIX: Save immediately after reset to overwrite old save
+        // This prevents "scamming" where old stats persist if user quits before auto-save
+        SaveSystem.save({
+            currentLevel: this.currentLevel,
+            currentArea: 'forest',
+            defeatedBosses: this.defeatedBosses,
+            playTime: this.playTime
+        });
+        console.log('[DEBUG] Saved fresh game state to prevent scam from old save');
+
         this.state = 'dialogue';
         Dialogue.start('intro');
 
