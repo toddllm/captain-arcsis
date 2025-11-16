@@ -260,6 +260,10 @@ const Game = {
         Enemies.update(deltaTime, Player);
         Fairy.update(deltaTime, Player);
         Bosses.update(deltaTime, Player);
+
+        // Check button press BEFORE puzzles (so 'E' key isn't consumed by puzzle interactions)
+        const buttonPressed = World.checkButtonPress(Player);
+
         Puzzles.update(Player);
         Puzzles.updateBookDisplay(); // Handle in-game book reading
         Combat.update(deltaTime);
@@ -272,7 +276,7 @@ const Game = {
             this.transitionToArea(nextArea);
         }
 
-        if (World.checkButtonPress(Player)) {
+        if (buttonPressed) {
             Player.setFlag('button_pressed', true);
             Audio.buttonPress();
             this.state = 'dialogue';
