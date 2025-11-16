@@ -26,7 +26,7 @@ jobs:
       - name: Check if PR already exists
         id: check-pr
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
           echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
@@ -64,7 +64,7 @@ jobs:
       - name: Create Pull Request
         if: steps.check-pr.outputs.pr_exists == '0'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           BRANCH_NAME="${{ steps.check-pr.outputs.branch }}"
           TITLE="${{ steps.pr-info.outputs.title }}"

@@ -8,6 +8,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to test'
+        required: false
+        type: string
 
 env:
   SITE_URL: https://d148t8mrj9hw61.cloudfront.net
