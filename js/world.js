@@ -240,6 +240,314 @@ const World = {
             spawnPlayer: { x: 400, y: 500 },
             enemies: [],
             boss: 'anizon',
+            nextArea: 'crystal_caverns_1'
+        },
+
+        // CRYSTAL CAVERNS - New World!
+        crystal_caverns_1: {
+            name: 'Crystal Caverns - Entrance',
+            width: 25,
+            height: 18,
+            music: 'crystal',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('crystal_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('crystal_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+
+                // Crystal formations
+                const crystals = [
+                    [6, 4], [6, 5], [12, 6], [12, 7], [12, 8],
+                    [18, 3], [18, 4], [18, 5], [8, 12], [8, 13]
+                ];
+                crystals.forEach(([cx, cy]) => {
+                    map[cy][cx] = 'crystal_wall';
+                    collisions[cy][cx] = 1;
+                });
+
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 64, y: 300 },
+            enemies: [
+                { type: 'crystal_spider', x: 250, y: 150 },
+                { type: 'crystal_spider', x: 450, y: 350 },
+                { type: 'crystal_elemental', x: 600, y: 200 }
+            ],
+            puzzleElements: [
+                { type: 'chest', x: 700, y: 100, id: 'cc1_chest', contents: { type: 'coins', amount: 100 } },
+                { type: 'key', x: 350, y: 450, id: 'cc1_key' },
+                { type: 'door', x: 750, y: 280, id: 'cc1_exit', requiresKey: true }
+            ],
+            nextArea: 'crystal_caverns_2'
+        },
+
+        crystal_caverns_2: {
+            name: 'Crystal Caverns - Deep',
+            width: 25,
+            height: 18,
+            music: 'crystal',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('crystal_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('crystal_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 64, y: 300 },
+            enemies: [
+                { type: 'crystal_elemental', x: 300, y: 200 },
+                { type: 'crystal_elemental', x: 500, y: 350 },
+                { type: 'gem_golem', x: 400, y: 280 }
+            ],
+            puzzleElements: [
+                { type: 'chest', x: 150, y: 100, id: 'cc2_chest', contents: { type: 'health', amount: 100 } }
+            ],
+            boss: 'crystal_guardian',
+            nextArea: 'shadow_realm_1'
+        },
+
+        // SHADOW REALM - Dark and dangerous!
+        shadow_realm_1: {
+            name: 'Shadow Realm - Gateway',
+            width: 25,
+            height: 18,
+            music: 'shadow',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('shadow_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('shadow_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+
+                // Shadow pillars
+                const pillars = [
+                    [5, 5], [10, 5], [15, 5], [20, 5],
+                    [5, 12], [10, 12], [15, 12], [20, 12]
+                ];
+                pillars.forEach(([px, py]) => {
+                    map[py][px] = 'shadow_wall';
+                    collisions[py][px] = 1;
+                });
+
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 64, y: 300 },
+            enemies: [
+                { type: 'shadow_assassin', x: 300, y: 180 },
+                { type: 'shadow_assassin', x: 500, y: 400 },
+                { type: 'void_wraith', x: 650, y: 250 }
+            ],
+            puzzleElements: [
+                { type: 'switch', x: 200, y: 450, id: 'sr1_switch', linkedTo: 'sr1_door' },
+                { type: 'door', x: 750, y: 280, id: 'sr1_exit' },
+                { type: 'door', x: 600, y: 100, id: 'sr1_door' },
+                { type: 'chest', x: 700, y: 100, id: 'sr1_chest', contents: { type: 'exp', amount: 500 } }
+            ],
+            nextArea: 'shadow_realm_2'
+        },
+
+        shadow_realm_2: {
+            name: 'Shadow Realm - Abyss',
+            width: 25,
+            height: 18,
+            music: 'shadow',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('shadow_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('shadow_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 400, y: 450 },
+            enemies: [
+                { type: 'void_wraith', x: 200, y: 200 },
+                { type: 'void_wraith', x: 600, y: 200 },
+                { type: 'nightmare_beast', x: 400, y: 280 }
+            ],
+            puzzleElements: [
+                { type: 'chest', x: 100, y: 100, id: 'sr2_chest', contents: { type: 'coins', amount: 200 } }
+            ],
+            boss: 'shadow_king',
+            nextArea: 'sky_citadel_1'
+        },
+
+        // SKY CITADEL - The final challenges!
+        sky_citadel_1: {
+            name: 'Sky Citadel - Lower Halls',
+            width: 25,
+            height: 18,
+            music: 'sky',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('sky_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('sky_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+
+                // Columns
+                const columns = [
+                    [4, 4], [4, 13], [12, 4], [12, 13], [20, 4], [20, 13]
+                ];
+                columns.forEach(([cx, cy]) => {
+                    map[cy][cx] = 'sky_wall';
+                    collisions[cy][cx] = 1;
+                });
+
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 64, y: 300 },
+            enemies: [
+                { type: 'wind_elemental', x: 250, y: 150 },
+                { type: 'wind_elemental', x: 450, y: 400 },
+                { type: 'thunder_knight', x: 600, y: 280 }
+            ],
+            puzzleElements: [
+                { type: 'lever', x: 350, y: 100, id: 'sc1_lever', linkedTo: 'sc1_exit' },
+                { type: 'door', x: 750, y: 280, id: 'sc1_exit' },
+                { type: 'chest', x: 700, y: 450, id: 'sc1_chest', contents: { type: 'health', amount: 150 } }
+            ],
+            nextArea: 'sky_citadel_2'
+        },
+
+        sky_citadel_2: {
+            name: 'Sky Citadel - Upper Halls',
+            width: 25,
+            height: 18,
+            music: 'sky',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('sky_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('sky_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 64, y: 300 },
+            enemies: [
+                { type: 'thunder_knight', x: 300, y: 200 },
+                { type: 'thunder_knight', x: 550, y: 350 },
+                { type: 'sky_dragon', x: 400, y: 280 }
+            ],
+            puzzleElements: [
+                { type: 'chest', x: 150, y: 450, id: 'sc2_chest', contents: { type: 'exp', amount: 1000 } }
+            ],
+            nextArea: 'sky_citadel_throne'
+        },
+
+        sky_citadel_throne: {
+            name: 'Sky Citadel - Throne of Eternity',
+            width: 25,
+            height: 18,
+            music: 'boss',
+            generate: function() {
+                const map = [];
+                const collisions = [];
+
+                for (let y = 0; y < 18; y++) {
+                    const row = [];
+                    const collRow = [];
+                    for (let x = 0; x < 25; x++) {
+                        if (y === 0 || y === 17 || x === 0 || x === 24) {
+                            row.push('sky_wall');
+                            collRow.push(1);
+                        } else {
+                            row.push('sky_floor');
+                            collRow.push(0);
+                        }
+                    }
+                    map.push(row);
+                    collisions.push(collRow);
+                }
+
+                return { map, collisions };
+            },
+            spawnPlayer: { x: 400, y: 500 },
+            enemies: [],
+            boss: 'eternal_emperor',
             isFinalBoss: true
         }
     },
@@ -316,6 +624,14 @@ const World = {
             Audio.startForestMusic();
         } else if (area.music === 'dungeon') {
             Audio.startDungeonMusic();
+        } else if (area.music === 'crystal') {
+            Audio.startCrystalMusic();
+        } else if (area.music === 'shadow') {
+            Audio.startShadowMusic();
+        } else if (area.music === 'sky') {
+            Audio.startSkyMusic();
+        } else if (area.music === 'boss') {
+            Audio.startBossMusic();
         }
 
         return area;
@@ -418,6 +734,24 @@ const World = {
                     case 'floor':
                         Sprites.drawDungeonFloor(ctx, drawX, drawY);
                         break;
+                    case 'crystal_wall':
+                        this.drawCrystalWall(ctx, drawX, drawY);
+                        break;
+                    case 'crystal_floor':
+                        this.drawCrystalFloor(ctx, drawX, drawY);
+                        break;
+                    case 'shadow_wall':
+                        this.drawShadowWall(ctx, drawX, drawY);
+                        break;
+                    case 'shadow_floor':
+                        this.drawShadowFloor(ctx, drawX, drawY);
+                        break;
+                    case 'sky_wall':
+                        this.drawSkyWall(ctx, drawX, drawY);
+                        break;
+                    case 'sky_floor':
+                        this.drawSkyFloor(ctx, drawX, drawY);
+                        break;
                 }
             }
         }
@@ -433,6 +767,75 @@ const World = {
         if (this.currentArea === 'forest') {
             const area = this.areas.forest;
             Sprites.drawButton(ctx, area.button.x, area.button.y, Player.getFlag('button_pressed'));
+        }
+    },
+
+    // NEW TILE DRAWING FUNCTIONS
+    drawCrystalWall: function(ctx, x, y) {
+        ctx.fillStyle = '#66CCFF';
+        ctx.fillRect(x, y, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE);
+        ctx.fillStyle = '#88EEFF';
+        ctx.fillRect(x + 4, y + 4, 12, 12);
+        ctx.fillRect(x + 16, y + 16, 12, 12);
+        ctx.strokeStyle = '#AAFFFF';
+        ctx.strokeRect(x, y, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE);
+    },
+
+    drawCrystalFloor: function(ctx, x, y) {
+        ctx.fillStyle = '#224466';
+        ctx.fillRect(x, y, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE);
+        ctx.fillStyle = '#336688';
+        ctx.fillRect(x + 8, y + 8, 16, 16);
+        // Sparkle effect
+        if (Math.random() > 0.98) {
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(x + Utils.random(0, 28), y + Utils.random(0, 28), 2, 2);
+        }
+    },
+
+    drawShadowWall: function(ctx, x, y) {
+        ctx.fillStyle = '#110011';
+        ctx.fillRect(x, y, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE);
+        ctx.fillStyle = '#220022';
+        ctx.fillRect(x + 2, y + 2, 28, 28);
+        ctx.strokeStyle = '#440044';
+        ctx.strokeRect(x, y, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE);
+    },
+
+    drawShadowFloor: function(ctx, x, y) {
+        ctx.fillStyle = '#0A000A';
+        ctx.fillRect(x, y, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE);
+        ctx.fillStyle = '#1A001A';
+        ctx.fillRect(x + 12, y + 12, 8, 8);
+        // Dark mist effect
+        if (Math.random() > 0.99) {
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = '#660066';
+            ctx.fillRect(x + Utils.random(0, 24), y + Utils.random(0, 24), 8, 8);
+            ctx.globalAlpha = 1;
+        }
+    },
+
+    drawSkyWall: function(ctx, x, y) {
+        ctx.fillStyle = '#AACCFF';
+        ctx.fillRect(x, y, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE);
+        ctx.fillStyle = '#BBDDFF';
+        ctx.fillRect(x + 4, y + 8, 24, 16);
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.strokeRect(x, y, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE);
+    },
+
+    drawSkyFloor: function(ctx, x, y) {
+        ctx.fillStyle = '#88AADD';
+        ctx.fillRect(x, y, CONSTANTS.TILE_SIZE, CONSTANTS.TILE_SIZE);
+        ctx.fillStyle = '#99BBEE';
+        ctx.fillRect(x + 6, y + 6, 20, 20);
+        // Cloud wisps
+        if (Math.random() > 0.97) {
+            ctx.globalAlpha = 0.4;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(x + Utils.random(0, 20), y + Utils.random(0, 20), 12, 4);
+            ctx.globalAlpha = 1;
         }
     },
 

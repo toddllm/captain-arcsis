@@ -501,34 +501,80 @@ const Game = {
     renderUI: function() {
         const ctx = this.ctx;
 
-        // Health bar
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(8, 8, 204, 24);
-        ctx.fillStyle = '#FF0000';
-        ctx.fillRect(10, 10, 200 * (Player.hp / Player.maxHp), 20);
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(10, 10, 200, 20);
-
+        // HEARTS DISPLAY (replaces HP bar)
         ctx.font = '12px monospace';
         ctx.fillStyle = '#FFFFFF';
         ctx.textAlign = 'left';
-        ctx.fillText(`HP: ${Math.floor(Player.hp)}/${Player.maxHp}`, 15, 26);
+        ctx.fillText('HEARTS:', 10, 22);
+
+        // Draw hearts
+        for (let i = 0; i < Player.maxHearts; i++) {
+            const heartX = 80 + i * 40;
+            const heartY = 10;
+
+            if (i < Player.hearts) {
+                // Full heart
+                ctx.fillStyle = '#FF0000';
+                this.drawHeart(ctx, heartX, heartY, 28, true);
+
+                // Current heart HP bar (for the last heart)
+                if (i === Player.hearts - 1) {
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(heartX - 2, heartY + 26, 32, 6);
+                    ctx.fillStyle = '#FF6666';
+                    ctx.fillRect(heartX, heartY + 27, 28 * (Player.hp / Player.heartHp), 4);
+                }
+            } else {
+                // Empty heart
+                ctx.fillStyle = '#444444';
+                this.drawHeart(ctx, heartX, heartY, 28, false);
+            }
+        }
+
+        // Special ability indicator (only when at full hearts)
+        if (Player.canUseSpecial) {
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 12px monospace';
+            ctx.fillText('SPECIAL READY! (R)', 10, 52);
+        } else {
+            ctx.fillStyle = '#666666';
+            ctx.font = '12px monospace';
+            ctx.fillText('SPECIAL: Need full hearts', 10, 52);
+        }
+
+        // Spin attack cooldown
+        if (Player.spinCooldown > 0) {
+            ctx.fillStyle = '#FF6600';
+            ctx.fillText(`SPIN: ${Math.ceil(Player.spinCooldown / 1000)}s`, 10, 68);
+        } else {
+            ctx.fillStyle = '#FF6600';
+            ctx.fillText('SPIN READY! (Shift+Space)', 10, 68);
+        }
+
+        // Dash cooldown
+        if (Player.dashCooldown > 0) {
+            ctx.fillStyle = '#00FFFF';
+            ctx.fillText(`DASH: ${(Player.dashCooldown / 1000).toFixed(1)}s`, 10, 84);
+        } else {
+            ctx.fillStyle = '#00FFFF';
+            ctx.fillText('DASH READY! (Q)', 10, 84);
+        }
 
         // Fairy mana bar (if has fairy)
+        const manaY = 100;
         if (Player.hasFairy) {
             ctx.fillStyle = '#000000';
-            ctx.fillRect(8, 38, 154, 18);
+            ctx.fillRect(8, manaY, 154, 18);
             ctx.fillStyle = '#FF69B4';
-            ctx.fillRect(10, 40, 150 * (Player.fairyMana / Player.maxFairyMana), 14);
+            ctx.fillRect(10, manaY + 2, 150 * (Player.fairyMana / Player.maxFairyMana), 14);
             ctx.strokeStyle = '#FFB6C1';
-            ctx.strokeRect(10, 40, 150, 14);
+            ctx.strokeRect(10, manaY + 2, 150, 14);
             ctx.fillStyle = '#FFB6C1';
-            ctx.fillText(`MANA: ${Math.floor(Player.fairyMana)}`, 15, 52);
+            ctx.fillText(`MANA: ${Math.floor(Player.fairyMana)}`, 15, manaY + 14);
         }
 
         // Experience bar
-        const expY = Player.hasFairy ? 62 : 38;
+        const expY = Player.hasFairy ? 124 : 100;
         ctx.fillStyle = '#000000';
         ctx.fillRect(8, expY, 154, 18);
         ctx.fillStyle = '#00FF00';
@@ -548,11 +594,34 @@ const Game = {
             ctx.fillText(`KEYS: ${Player.keys}`, 10, expY + 52);
         }
 
+        // Max combo display
+        if (Player.maxCombo > 1) {
+            ctx.fillStyle = '#FF00FF';
+            ctx.fillText(`MAX COMBO: ${Player.maxCombo}x`, 10, expY + 68);
+        }
+
         // Equipment info (top right)
         ctx.textAlign = 'right';
         ctx.fillStyle = '#FFFFFF';
         ctx.fillText(`SWORD LV: ${Player.equipment.swordLevel}`, CONSTANTS.CANVAS_WIDTH - 10, 26);
         ctx.fillText(`SHIELD LV: ${Player.equipment.shieldLevel}`, CONSTANTS.CANVAS_WIDTH - 10, 46);
+
+        // Power-up status
+        let powerUpY = 66;
+        if (Player.powerUps.damageBoost > 0) {
+            ctx.fillStyle = '#FF4444';
+            ctx.fillText(`DMG BOOST: ${Math.ceil(Player.powerUps.damageBoost / 1000)}s`, CONSTANTS.CANVAS_WIDTH - 10, powerUpY);
+            powerUpY += 16;
+        }
+        if (Player.powerUps.speedBoost > 0) {
+            ctx.fillStyle = '#44FF44';
+            ctx.fillText(`SPD BOOST: ${Math.ceil(Player.powerUps.speedBoost / 1000)}s`, CONSTANTS.CANVAS_WIDTH - 10, powerUpY);
+            powerUpY += 16;
+        }
+        if (Player.powerUps.shield > 0) {
+            ctx.fillStyle = '#4444FF';
+            ctx.fillText(`SHIELD: ${Math.ceil(Player.powerUps.shield / 1000)}s`, CONSTANTS.CANVAS_WIDTH - 10, powerUpY);
+        }
 
         // Area name
         ctx.textAlign = 'center';
@@ -573,6 +642,27 @@ const Game = {
             ctx.fillStyle = '#FF6666';
             ctx.fillText(`Enemies: ${enemyCount}`, 10, CONSTANTS.CANVAS_HEIGHT - 10);
         }
+    },
+
+    // Helper function to draw heart shape
+    drawHeart: function(ctx, x, y, size, filled) {
+        ctx.save();
+        ctx.translate(x + size / 2, y + size / 2);
+
+        ctx.beginPath();
+        ctx.moveTo(0, size * 0.3);
+        ctx.bezierCurveTo(-size * 0.5, -size * 0.3, -size * 0.5, size * 0.1, 0, size * 0.5);
+        ctx.bezierCurveTo(size * 0.5, size * 0.1, size * 0.5, -size * 0.3, 0, size * 0.3);
+
+        if (filled) {
+            ctx.fill();
+        } else {
+            ctx.strokeStyle = ctx.fillStyle;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        ctx.restore();
     },
 
     renderPauseMenu: function() {
