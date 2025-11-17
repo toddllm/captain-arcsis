@@ -1157,6 +1157,9 @@ class Boss {
     }
 
     takeDamage(damage) {
+        // CRITICAL FIX: Prevent taking damage if already defeated
+        if (this.defeated) return 0;
+
         const actualDamage = Math.max(1, damage - this.defense);
         this.hp -= actualDamage;
 
@@ -1169,6 +1172,9 @@ class Boss {
     }
 
     defeat() {
+        // CRITICAL FIX: Prevent duplicate defeat calls
+        if (this.defeated) return;
+
         this.defeated = true;
         Audio.stopMusic();
         Audio.victory();
