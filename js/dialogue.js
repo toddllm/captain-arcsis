@@ -313,6 +313,49 @@ const Dialogue = {
                 "Until next time!"
             ],
             onComplete: 'game_complete'
+        },
+
+        lica_transformation: {
+            speaker: 'Lica',
+            lines: [
+                "*Lica slowly descends from above*",
+                "*Pixels and light swirl around her form*",
+                "Arcsis... you have proven yourself worthy.",
+                "The time has come for the TRUE final battle.",
+                "*Lica rises, her power radiating outward*",
+                "*The ground trembles as crystals burst from the earth*",
+                "*They surround the podium, forming a perfect circle*",
+                "WITNESS THE ULTIMATE CHALLENGE!",
+                "*Lica takes a single step*",
+                "*Reality itself begins to fracture*",
+                "ERROR... ERROR... UNKNOWN ENTITY APPROACHING...",
+                "I summon forth... CHAOS!",
+                "The Unknown Lifeform awakens!",
+                "This is the MEGA SUPREME BOSS BATTLE!",
+                "CHAOS VS ARCSIS - THE FATE OF ALL REALITY!",
+                "Prepare yourself, Captain Arcsis...",
+                "FOR THE BATTLE THAT TRANSCENDS EXISTENCE ITSELF!"
+            ],
+            onComplete: 'trigger_chaos_boss'
+        },
+
+        chaos_victory: {
+            speaker: 'Lica',
+            lines: [
+                "*The Chaos entity dissipates into nothingness*",
+                "IMPOSSIBLE! You have defeated CHAOS itself!",
+                "Arcsis... you are truly the greatest warrior in existence!",
+                "Not even I, the Eternal Guardian, could have predicted this!",
+                "*Reality stabilizes as Chaos fades*",
+                "*The crystals around the podium shatter into stardust*",
+                "You have saved not just this world, but ALL worlds!",
+                "The multiverse itself owes you a debt, Captain Arcsis!",
+                "*A portal of pure light opens*",
+                "Your legend will echo through eternity...",
+                "CAPTAIN ARCSIS - SLAYER OF CHAOS!",
+                "THE ULTIMATE CHAMPION!"
+            ],
+            onComplete: 'chaos_complete'
         }
     },
 
@@ -389,6 +432,13 @@ const Dialogue = {
             Fairy.activate(Player);
         } else if (callback === 'game_complete') {
             Game.showGameComplete();
+        } else if (callback === 'trigger_chaos_boss') {
+            // Spawn the Chaos boss
+            Bosses.spawn('chaos');
+            Bosses.activate();
+            Game.state = 'boss_intro';
+        } else if (callback === 'chaos_complete') {
+            Game.showChaosComplete();
         }
 
         return callback;
