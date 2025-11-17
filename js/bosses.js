@@ -460,6 +460,55 @@ class Boss {
                 ];
                 break;
 
+            case 'chaos':
+                // CHAOS - Unknown Lifeform (MEGA SUPREME FINAL BOSS)
+                this.name = 'CHAOS - Unknown Lifeform';
+                this.x = 400;
+                this.y = 100;
+                this.width = 128;
+                this.height = 144;
+                this.maxHp = 99999; // ULTIMATE BOSS HP
+                this.hp = 99999;
+                this.attack = 250; // DEVASTATING
+                this.defense = 120; // NEARLY INVINCIBLE
+                this.phase = 1;
+                this.maxPhases = 5;
+
+                // Chaos has ALL abilities
+                this.canTeleport = true;
+                this.canSummon = true;
+                this.canReflect = true;
+                this.canRewind = true;
+                this.canRebirth = true;
+                this.lifeDrain = 0.3;
+                this.chaosEnergy = 100;
+                this.realityDistortion = 0;
+                this.unknownForm = true;
+
+                this.attacks = [
+                    'chaos_wave',
+                    'reality_collapse',
+                    'void_dimension',
+                    'existence_erasure',
+                    'chaos_storm',
+                    'dimensional_rift',
+                    'annihilation_beam',
+                    'chaos_incarnate',
+                    'final_chaos'
+                ];
+
+                this.introDialogue = [
+                    "...",
+                    "ERROR... ERROR... UNKNOWN ENTITY DETECTED...",
+                    "I AM... CHAOS...",
+                    "I AM... EVERYTHING... AND NOTHING...",
+                    "REALITY BENDS TO MY WILL...",
+                    "EXISTENCE... IRRELEVANT...",
+                    "YOU FACE THE UNKNOWN...",
+                    "WITNESS TRUE CHAOS!"
+                ];
+                break;
+
             default:
                 this.name = 'Unknown Boss';
                 this.x = 400;

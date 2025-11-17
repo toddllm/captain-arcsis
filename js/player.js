@@ -180,6 +180,8 @@ const Player = {
     anizonFriends: [], // Friends unlocked from Anizon
     secretsUnlocked: [],
     hasAnizonHeartKey: false, // Special key to unlock mom's prison cell
+    chaosUnlocked: false, // Unlocks after 10 Anizon defeats
+    chaosDefeated: false, // True if player has defeated Chaos
 
     // Skill Points and Skill Tree
     skillPoints: 0,
@@ -332,6 +334,8 @@ const Player = {
         this.anizonFriends = [];
         this.secretsUnlocked = [];
         this.hasAnizonHeartKey = false;
+        this.chaosUnlocked = false;
+        this.chaosDefeated = false;
 
         // Reset skills
         this.skillPoints = 0;
@@ -1677,6 +1681,8 @@ const Player = {
             anizonDefeats: this.anizonDefeats,
             anizonFriends: [...this.anizonFriends],
             secretsUnlocked: [...this.secretsUnlocked],
+            chaosUnlocked: this.chaosUnlocked,
+            chaosDefeated: this.chaosDefeated,
             hasAnizonHeartKey: this.hasAnizonHeartKey,
             skillPoints: this.skillPoints,
             skills: Utils.clone(this.skills),

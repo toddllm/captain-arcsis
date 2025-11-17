@@ -405,16 +405,58 @@ const Game = {
 
                     this.showNotification(`ANIZON DEFEATED! +${Player.anizonDefeats} Secret Keys!`, '#FFD700');
 
-                    // Anizon appears in EVERY level - transition to next with new Anizon
+                    // Check if player has defeated Anizon enough times to trigger Chaos
+                    if (Player.anizonDefeats >= 10 && !Player.chaosUnlocked) {
+                        Player.chaosUnlocked = true;
+                        // Trigger Lica transformation sequence after a delay
+                        setTimeout(() => {
+                            this.triggerLicaTransformation();
+                        }, 3000);
+                        return; // Don't transition to next area, trigger Chaos instead
+                    }
+
+                    // Show victory effects for 3 seconds
+                    const victoryEffectDuration = 3000;
+
+                    // Clear the boss immediately to prevent re-checks
+                    setTimeout(() => {
+                        Bosses.clear();
+                        console.log('[DEBUG] Boss cleared after victory effects');
+                    }, victoryEffectDuration);
+
+                    // Anizon appears in EVERY level - transition to next with new Anizon after cooldown
+                    const transitionDelay = 5000;
                     setTimeout(() => {
                         this.anizonDefeatHandled = false; // Reset for next encounter
+                        console.log('[DEBUG] Transitioning to next area...');
                         if (area.nextArea) {
                             this.transitionToArea(area.nextArea);
                         } else {
                             // Loop back or generate endless dungeon
                             this.generateNextDungeonLevel();
                         }
-                    }, 5000);
+                    }, transitionDelay);
+                }
+            } else if (Bosses.currentBoss && Bosses.currentBoss.type === 'chaos') {
+                // Handle Chaos boss defeat specially
+                if (!Player.chaosDefeated) {
+                    Player.chaosDefeated = true;
+                    console.log('[DEBUG] CHAOS DEFEATED!');
+
+                    // Save immediately
+                    SaveSystem.save({
+                        currentLevel: this.currentLevel,
+                        currentArea: World.currentArea,
+                        defeatedBosses: this.defeatedBosses,
+                        playTime: this.playTime
+                    });
+
+                    // Show victory dialogue
+                    setTimeout(() => {
+                        Bosses.clear();
+                        this.state = 'dialogue';
+                        Dialogue.start('chaos_victory');
+                    }, 3000);
                 }
             } else {
                 if (!this.defeatedBosses.includes(area.boss)) {
@@ -502,6 +544,24 @@ const Game = {
                 this.notification = '';
             }
         }
+    },
+
+    showGameComplete: function() {
+        this.state = 'victory';
+        Audio.stopMusic();
+        Audio.victory();
+    },
+
+    showChaosComplete: function() {
+        this.state = 'victory';
+        Audio.stopMusic();
+        Audio.victory();
+        this.showNotification('CHAOS DEFEATED! ULTIMATE VICTORY!', '#FFD700');
+    },
+
+    triggerLicaTransformation: function() {
+        this.state = 'dialogue';
+        Dialogue.start('lica_transformation');
     },
 
     renderNotification: function() {
